@@ -16,7 +16,9 @@ jobs:
             java-version: '11'
 
         - name: Run tests
-          run: ./gradlew test
+          run:
+            touch local.properties
+            ./gradlew test
 
         - name: Build Project
           run: ./gradlew assemble
