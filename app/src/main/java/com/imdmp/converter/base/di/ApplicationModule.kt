@@ -1,4 +1,4 @@
-package com.imdmp.converter.di
+package com.imdmp.converter.base.di
 
 import dagger.Module
 import dagger.Provides

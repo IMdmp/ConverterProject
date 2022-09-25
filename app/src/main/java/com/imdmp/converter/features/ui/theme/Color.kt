@@ -1,4 +1,4 @@
-package com.imdmp.converter.ui.theme
+package com.imdmp.converter.features.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
