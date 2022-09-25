@@ -8,17 +8,23 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Button
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.SwapVerticalCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -29,21 +35,38 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 
+enum class TransactionType {
+    SELL, RECEIVE
+}
+
 @Composable
-fun ConverterScreen(converterViewModel: ConverterViewModel) {
+fun ConverterScreen(
+    converterViewModel: ConverterViewModel,
+    converterScreenCallbacks: ConverterScreenCallbacks
+) {
+    val sellCurrency = converterViewModel.sellCurrency.observeAsState("EUR")
+    val receiveCurrency = converterViewModel.receiveCurrency.observeAsState("USD")
+
     ConverterScreen(
-        sellCurrency = converterViewModel.sellCurrency ?: "",
-        receiveCurrency = converterViewModel.receiveCurrency ?: "",
+        sellCurrency = sellCurrency.value,
+        receiveCurrency = receiveCurrency.value,
+        switchCurrency = {
+            converterViewModel.switchCurrency()
+        },
         convertData = {
             converterViewModel.convertData(it.toString())
-        })
+        }) {
+        converterScreenCallbacks.openCurrencyPicker(transactionType = it)
+    }
 }
 
 @Composable
 private fun ConverterScreen(
     sellCurrency: String,
     receiveCurrency: String,
-    convertData: (d: Double) -> Unit
+    convertData: (d: Double) -> Unit,
+    switchCurrency: () -> Unit,
+    currencySelected: (t: TransactionType) -> Unit
 ) {
     val sellData = remember { mutableStateOf("") }
     val receiveData = remember { mutableStateOf("") }
@@ -60,7 +83,9 @@ private fun ConverterScreen(
                     bottom = 8.dp
                 )
         ) {
-            val (balanceRow, currencyLabel, sellRow, receiveRow, submitButton) = createRefs()
+            val (balanceRow, currencyLabel,
+                sellRow, receiveRow,
+                switchCurrencyButton, submitButton) = createRefs()
 
             BalanceRow(modifier = Modifier
                 .padding(top = 16.dp)
@@ -75,19 +100,42 @@ private fun ConverterScreen(
                 }, text = "Currency Exchange"
             )
 
-            SellRow(modifier = Modifier
-                .padding(top = 8.dp, bottom = 4.dp)
-                .constrainAs(sellRow) {
-                    top.linkTo(currencyLabel.bottom, 16.dp)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                }, sellCurrency ?: "", sellData, {})
+            SellRow(
+                modifier = Modifier
+                    .padding(top = 8.dp, bottom = 4.dp)
+                    .constrainAs(sellRow) {
+                        top.linkTo(currencyLabel.bottom, 16.dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    }, sellCurrency, sellData
+            ) {
+                currencySelected(TransactionType.SELL)
+            }
 
-            ReceiveRow(modifier = Modifier
-                .padding(top = 4.dp, bottom = 8.dp)
-                .constrainAs(receiveRow) {
-                    top.linkTo(sellRow.bottom)
-                }, receiveCurrency ?: "", receiveData, {})
+            IconButton(
+                modifier = Modifier
+                    .constrainAs(switchCurrencyButton) {
+                        top.linkTo(sellRow.bottom)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    }
+                    .size(24.dp),
+                onClick = {
+                    switchCurrency()
+                }) {
+                Icon(Icons.Rounded.SwapVerticalCircle, "swap currency")
+            }
+
+            ReceiveRow(
+                modifier = Modifier
+                    .padding(top = 4.dp, bottom = 8.dp)
+                    .constrainAs(receiveRow) {
+                        top.linkTo(switchCurrencyButton.bottom)
+                    },
+                receiveCurrency, receiveData,
+            ) {
+                currencySelected(TransactionType.RECEIVE)
+            }
 
 
             Button(modifier = Modifier
@@ -205,5 +253,5 @@ fun ReceiveRow(
 @Preview
 @Composable
 fun PreviewConverterScreen() {
-    ConverterScreen(sellCurrency = "EUR", receiveCurrency = "USD") {}
+    ConverterScreen(sellCurrency = "EUR", receiveCurrency = "USD", {}, {}) {}
 }

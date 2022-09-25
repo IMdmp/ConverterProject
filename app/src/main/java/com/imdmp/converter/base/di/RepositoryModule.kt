@@ -1,4 +1,4 @@
-package com.imdmp.converter.di
+package com.imdmp.converter.base.di
 
 import com.imdmp.converter.repository.network.ConverterRepository
 import com.imdmp.converter.repository.network.impl.ConverterRepositoryImpl
