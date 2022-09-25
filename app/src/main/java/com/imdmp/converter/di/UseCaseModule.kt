@@ -1,6 +1,8 @@
 package com.imdmp.converter.di
 
+import com.imdmp.converter.usecase.ConvertCurrencyUseCase
 import com.imdmp.converter.usecase.PullRatesAndSaveCurrenciesUseCase
+import com.imdmp.converter.usecase.impl.ConvertCurrencyUseCaseImpl
 import com.imdmp.converter.usecase.impl.PullRatesAndSaveCurrenciesUseCaseImpl
 import dagger.Binds
 import dagger.Module
@@ -14,6 +16,10 @@ abstract class UseCaseModule {
     @Binds
     abstract fun providePullRatesAndSaveCurrenciesUseCase(
         pullRatesAndSaveCurrenciesUseCaseImpl: PullRatesAndSaveCurrenciesUseCaseImpl
-    ):
-        PullRatesAndSaveCurrenciesUseCase
+    ): PullRatesAndSaveCurrenciesUseCase
+
+    @Binds
+    abstract fun bindConvertCurrencyUseCase(
+        convertCurrencyUseCase: ConvertCurrencyUseCaseImpl
+    ): ConvertCurrencyUseCase
 }
