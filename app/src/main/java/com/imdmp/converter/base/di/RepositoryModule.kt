@@ -1,7 +1,7 @@
 package com.imdmp.converter.base.di
 
-import com.imdmp.converter.repository.network.ConverterRepository
-import com.imdmp.converter.repository.network.impl.ConverterRepositoryImpl
+import com.imdmp.converter.repository.ConverterRepository
+import com.imdmp.converter.repository.impl.ConverterRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

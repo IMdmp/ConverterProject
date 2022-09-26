@@ -1,10 +1,14 @@
 package com.imdmp.converter.base.di
 
 import com.imdmp.converter.usecase.ConvertCurrencyUseCase
+import com.imdmp.converter.usecase.FirstTimeSetupUseCase
 import com.imdmp.converter.usecase.GetAvailableCurrenciesUseCase
-import com.imdmp.converter.usecase.GetAvailableCurrenciesUseCaseImpl
+import com.imdmp.converter.usecase.GetWalletBalanceUseCase
 import com.imdmp.converter.usecase.PullRatesAndSaveCurrenciesUseCase
 import com.imdmp.converter.usecase.impl.ConvertCurrencyUseCaseImpl
+import com.imdmp.converter.usecase.impl.FirstTimeSetupUseCaseImpl
+import com.imdmp.converter.usecase.impl.GetAvailableCurrenciesUseCaseImpl
+import com.imdmp.converter.usecase.impl.GetWalletBalanceUseCaseImpl
 import com.imdmp.converter.usecase.impl.PullRatesAndSaveCurrenciesUseCaseImpl
 import dagger.Binds
 import dagger.Module
@@ -29,4 +33,14 @@ abstract class UseCaseModule {
     abstract fun bindGetAvailableCurrenciesUseCase(
         getAvailableCurrenciesUseCaseImpl: GetAvailableCurrenciesUseCaseImpl
     ): GetAvailableCurrenciesUseCase
+
+    @Binds
+    abstract fun bindFirstTimeSetupUseCase(
+        firstTimeSetupUseCase: FirstTimeSetupUseCaseImpl
+    ): FirstTimeSetupUseCase
+
+    @Binds
+    abstract fun bindGetWalletBalanceUseCase(
+        getWalletBalanceUseCase: GetWalletBalanceUseCaseImpl
+    ): GetWalletBalanceUseCase
 }

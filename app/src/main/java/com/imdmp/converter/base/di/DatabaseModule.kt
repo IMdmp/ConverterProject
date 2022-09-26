@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.room.Room
 import com.imdmp.converter.repository.database.AppDatabase
 import com.imdmp.converter.repository.database.dao.CurrencyDAO
+import com.imdmp.converter.repository.database.dao.WalletDAO
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,5 +23,10 @@ class DatabaseModule {
     @Provides
     fun provideCurrencyDao(db: AppDatabase): CurrencyDAO {
         return db.currencyDao()
+    }
+
+    @Provides
+    fun provideWalletDao(db: AppDatabase): WalletDAO {
+        return db.walletDao()
     }
 }
