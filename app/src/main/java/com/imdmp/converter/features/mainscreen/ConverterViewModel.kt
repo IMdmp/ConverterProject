@@ -1,10 +1,15 @@
 package com.imdmp.converter.features.mainscreen
 
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.imdmp.converter.features.mainscreen.currencypicker.CurrencyModel
+import com.imdmp.converter.schema.WalletSchema
 import com.imdmp.converter.usecase.ConvertCurrencyUseCase
+import com.imdmp.converter.usecase.GetWalletBalanceUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -13,22 +18,30 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ConverterViewModel @Inject constructor(
-    private val convertCurrencyUseCase: ConvertCurrencyUseCase
+    private val convertCurrencyUseCase: ConvertCurrencyUseCase,
+    private val getWalletBalanceUseCase: GetWalletBalanceUseCase,
 ): ViewModel() {
-    private val _sellCurrency: MutableLiveData<String> by lazy { MutableLiveData() }
-    val sellCurrency get() = _sellCurrency
+    private val _converterViewState = MutableLiveData<ConverterViewState>()
+    val converterViewState: LiveData<ConverterViewState> get() = _converterViewState
 
-    private val _receiveCurrency: MutableLiveData<String> by lazy { MutableLiveData() }
-    val receiveCurrency get() = _receiveCurrency
+    private val _walletBalance = MutableLiveData<SnapshotStateList<WalletSchema>>()
+    val walletBalance: LiveData<SnapshotStateList<WalletSchema>> get() = _walletBalance
 
     init {
-        _sellCurrency.value = "EUR"
-        _receiveCurrency.value = "USD"
+        _converterViewState.value = ConverterViewState.init().copy(
+            sellCurrencyLabel = "PHP",
+            sellCurrencyData = 0.0,
+            receiveCurrencyLabel = "MYR",
+            receiveCurrencyData = 0.0,
+        )
+        viewModelScope.launch(Dispatchers.IO) {
+            val walletData = getWalletBalanceUseCase().toMutableStateList()
+
+            _walletBalance.postValue(walletData)
+        }
     }
 
-
     fun convertData(sellData: String) {
-
         sellData.let {
             viewModelScope.launch(Dispatchers.IO) {
                 val resultData = convertCurrencyUseCase(sellData.toDouble(), "EUR", "USD")
@@ -41,26 +54,31 @@ class ConverterViewModel @Inject constructor(
     fun updateCurrency(currencyModel: CurrencyModel, transactionType: TransactionType) {
         when (transactionType) {
             TransactionType.RECEIVE -> {
-                if (currencyModel.abbrev == _sellCurrency.value) {
+                if (currencyModel.abbrev == converterViewState.value?.sellCurrencyLabel) {
                     switchCurrency()
                 } else {
-                    _receiveCurrency.value = currencyModel.abbrev
+                    _converterViewState.value =
+                        converterViewState.value?.copy(receiveCurrencyLabel = currencyModel.abbrev)
                 }
             }
             TransactionType.SELL -> {
-                if (currencyModel.abbrev == _receiveCurrency.value) {
+                if (currencyModel.abbrev == converterViewState.value?.receiveCurrencyLabel) {
                     switchCurrency()
                 } else {
-                    _sellCurrency.value = currencyModel.abbrev
+                    _converterViewState.value =
+                        converterViewState.value?.copy(sellCurrencyLabel = currencyModel.abbrev)
                 }
-
             }
         }
     }
 
     fun switchCurrency() {
-        val temp = _receiveCurrency.value
-        _receiveCurrency.value = _sellCurrency.value
-        _sellCurrency.value = temp
+        converterViewState.value?.also {
+            val temp = it.receiveCurrencyLabel
+            _converterViewState.value = it.copy(
+                receiveCurrencyLabel = it.sellCurrencyLabel,
+                sellCurrencyLabel = temp
+            )
+        }
     }
 }

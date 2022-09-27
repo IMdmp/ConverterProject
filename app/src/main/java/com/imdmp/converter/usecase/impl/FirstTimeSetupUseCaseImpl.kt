@@ -9,8 +9,8 @@ class FirstTimeSetupUseCaseImpl @Inject constructor(
     private val walletDAO: WalletDAO
 ): FirstTimeSetupUseCase {
 
-    override suspend fun invoke(walletEntity: WalletEntity) {
-        walletDAO.insertWallet(walletEntity)
+    override suspend fun invoke(walletEntity: List<WalletEntity>) {
+        walletDAO.insertAllWallet(walletEntity)
     }
 
 }

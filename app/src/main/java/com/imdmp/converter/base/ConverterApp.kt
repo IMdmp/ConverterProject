@@ -53,7 +53,18 @@ class ConverterApp: Application() {
 
     private suspend fun setupWallet() {
 
-        firstTimeSetupUseCase(WalletEntity(WalletSchema.EUR, 1000.00))
+        firstTimeSetupUseCase(
+            listOf(
+                WalletEntity(WalletSchema.EUR, 1000.00),
+                WalletEntity(WalletSchema.USD, 0.0),
+                WalletEntity(WalletSchema.BGN, 0.0),
+                WalletEntity(WalletSchema.PHP, 0.0),
+                WalletEntity(WalletSchema.YEN, 0.0),
+
+                )
+        )
+
+
     }
 
 

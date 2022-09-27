@@ -8,6 +8,9 @@ data class WalletSchema(
     companion object {
         const val EUR = "EUR"
         const val USD = "USD"
+        const val BGN = "BGN"
+        const val PHP = "PHP"
+        const val YEN = "YEN"
 
     }
 }

@@ -28,10 +28,10 @@ class FirstTimeSetupUseCaseImplTest {
 
     @Test
     fun `useCase invoke calls WalletDao with starting balance in EUR`() {
-        val expectedWalletEntity = WalletEntity(WalletSchema.EUR, 1000.00)
+        val expectedWalletEntity = listOf(WalletEntity(WalletSchema.EUR, 1000.00))
         runTest {
             useCase(expectedWalletEntity)
-            verify(mockedWalletDAO).insertWallet(expectedWalletEntity)
+            verify(mockedWalletDAO).insertAllWallet(expectedWalletEntity)
 
         }
     }
