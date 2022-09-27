@@ -1,7 +1,9 @@
 package com.imdmp.converter.repository.network.impl
 
+import com.imdmp.converter.repository.ConverterRepository
 import com.imdmp.converter.repository.database.dao.CurrencyDAO
-import com.imdmp.converter.repository.network.ConverterRepository
+import com.imdmp.converter.repository.database.dao.WalletDAO
+import com.imdmp.converter.repository.impl.ConverterRepositoryImpl
 import com.imdmp.converter.repository.network.ConverterService
 import com.imdmp.converter.schema.convertToPullLatestRatesSchema
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,13 +29,18 @@ class ConverterRepositoryImplTest {
     @Mock
     lateinit var mockedCurrencyDAO: CurrencyDAO
 
+    @Mock
+    lateinit var mockedWalletDAO: WalletDAO
+
+    val testDispatcher = StandardTestDispatcher()
+
     @Before
     fun setUp() {
         MockitoAnnotations.openMocks(this)
         repository = ConverterRepositoryImpl(
             converterService = mockedConverterService,
             currencyDAO = mockedCurrencyDAO,
-            dispatcher = StandardTestDispatcher()
+            walletDAO = mockedWalletDAO
         )
     }
 
@@ -67,4 +74,7 @@ class ConverterRepositoryImplTest {
         whenever(mockedConverterService.pullLatestRates()).thenThrow(mockitoException)
         repository.pullLatestRates()
     }
+
+
+    // TODO : db tests
 }

@@ -1,6 +1,6 @@
 package com.imdmp.converter.usecase.impl
 
-import com.imdmp.converter.repository.network.ConverterRepository
+import com.imdmp.converter.repository.ConverterRepository
 import com.imdmp.converter.schema.PullLatestRatesSchema
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -11,6 +11,7 @@ import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
+@ExperimentalCoroutinesApi
 class PullRatesAndSaveCurrenciesUseCaseImplTest {
 
     lateinit var useCase: PullRatesAndSaveCurrenciesUseCaseImpl
@@ -24,7 +25,6 @@ class PullRatesAndSaveCurrenciesUseCaseImplTest {
         useCase = PullRatesAndSaveCurrenciesUseCaseImpl(mockedConverterRepository)
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `invoke calls pullLatestRates and currencyIdList`() = runTest {
         whenever(mockedConverterRepository.pullLatestRates()).thenReturn(

@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.imdmp.converter.schema.WalletSchema
 
 enum class TransactionType {
     SELL, RECEIVE
@@ -44,12 +45,13 @@ fun ConverterScreen(
     converterViewModel: ConverterViewModel,
     converterScreenCallbacks: ConverterScreenCallbacks
 ) {
-    val sellCurrency = converterViewModel.sellCurrency.observeAsState("EUR")
-    val receiveCurrency = converterViewModel.receiveCurrency.observeAsState("USD")
-
+    val viewState =
+        converterViewModel.converterViewState.observeAsState(ConverterViewState.init()).value
+    val walletListState = converterViewModel.walletBalance.observeAsState().value
     ConverterScreen(
-        sellCurrency = sellCurrency.value,
-        receiveCurrency = receiveCurrency.value,
+        sellCurrency = viewState.sellCurrencyLabel,
+        receiveCurrency = viewState.receiveCurrencyLabel,
+        walletList = walletListState?.toList() ?: listOf(),
         switchCurrency = {
             converterViewModel.switchCurrency()
         },
@@ -64,6 +66,7 @@ fun ConverterScreen(
 private fun ConverterScreen(
     sellCurrency: String,
     receiveCurrency: String,
+    walletList: List<WalletSchema>,
     convertData: (d: Double) -> Unit,
     switchCurrency: () -> Unit,
     currencySelected: (t: TransactionType) -> Unit
@@ -87,11 +90,14 @@ private fun ConverterScreen(
                 sellRow, receiveRow,
                 switchCurrencyButton, submitButton) = createRefs()
 
-            BalanceRow(modifier = Modifier
-                .padding(top = 16.dp)
-                .constrainAs(balanceRow) {
-                    top.linkTo(parent.top)
-                })
+            BalanceRow(
+                modifier = Modifier
+                    .padding(top = 16.dp)
+                    .constrainAs(balanceRow) {
+                        top.linkTo(parent.top)
+                    },
+                walletList = walletList
+            )
 
             Text(
                 modifier = Modifier.constrainAs(currencyLabel) {
@@ -145,7 +151,11 @@ private fun ConverterScreen(
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
                 },
-                onClick = { convertData(sellData.value.toDouble()) }) {
+                onClick = {
+                    if (sellData.value.isNotEmpty()) {
+                        convertData(sellData.value.toDouble())
+                    }
+                }) {
                 Text("Submit")
             }
 
@@ -154,7 +164,7 @@ private fun ConverterScreen(
 }
 
 @Composable
-fun BalanceRow(modifier: Modifier) {
+fun BalanceRow(modifier: Modifier, walletList: List<WalletSchema>) {
     val state = rememberScrollState()
     Column(modifier = modifier.fillMaxWidth()) {
         Text(modifier = Modifier.align(Alignment.Start), text = "My Balances")
@@ -164,8 +174,11 @@ fun BalanceRow(modifier: Modifier) {
                 .padding(top = 16.dp)
                 .horizontalScroll(state)
         ) {
-            repeat(10) {
-                Text(modifier = Modifier.padding(end = 16.dp), text = "1000.00 EUR")
+            walletList.forEach {
+                Text(
+                    modifier = Modifier.padding(end = 16.dp),
+                    text = "${it.currencyValue} ${it.currencyAbbrev}"
+                )
             }
         }
     }
@@ -253,5 +266,5 @@ fun ReceiveRow(
 @Preview
 @Composable
 fun PreviewConverterScreen() {
-    ConverterScreen(sellCurrency = "EUR", receiveCurrency = "USD", {}, {}) {}
+    ConverterScreen(sellCurrency = "EUR", receiveCurrency = "USD", listOf(), {}, {}) {}
 }

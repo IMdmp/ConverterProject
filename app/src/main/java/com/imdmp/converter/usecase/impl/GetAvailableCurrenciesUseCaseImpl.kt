@@ -1,6 +1,7 @@
-package com.imdmp.converter.usecase
+package com.imdmp.converter.usecase.impl
 
 import com.imdmp.converter.schema.CurrencySchema
+import com.imdmp.converter.usecase.GetAvailableCurrenciesUseCase
 import javax.inject.Inject
 
 class GetAvailableCurrenciesUseCaseImpl @Inject constructor(): GetAvailableCurrenciesUseCase {
