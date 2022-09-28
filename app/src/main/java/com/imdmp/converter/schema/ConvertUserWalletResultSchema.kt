@@ -5,5 +5,9 @@ sealed class ConvertUserWalletResultSchema {
 
     data class Error(val message: String): ConvertUserWalletResultSchema()
 
-    object Success: ConvertUserWalletResultSchema()
+    data class Success(
+        val commissionCharged: Double,
+        val sellData: WalletSchema,
+        val buyData: WalletSchema,
+    ): ConvertUserWalletResultSchema()
 }

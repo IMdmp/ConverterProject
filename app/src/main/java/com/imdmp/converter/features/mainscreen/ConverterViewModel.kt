@@ -4,8 +4,8 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.imdmp.converter.base.BaseViewModel
 import com.imdmp.converter.features.mainscreen.currencypicker.CurrencyModel
 import com.imdmp.converter.schema.CommissionCheckResultSchema
 import com.imdmp.converter.schema.ConvertUserWalletResultSchema
@@ -28,7 +28,7 @@ class ConverterViewModel @Inject constructor(
     private val updateWalletUseCase: UpdateWalletUseCase,
     private val commissionCheckUseCase: CommissionCheckUseCase,
     private val convertUserWalletCurrencyUseCase: ConvertUserWalletCurrencyUseCase,
-): ViewModel(), ConverterScreenCallbacks {
+): BaseViewModel(), ConverterScreenCallbacks {
     private val _converterViewState = MutableLiveData<ConverterViewState>()
     val converterViewState: LiveData<ConverterViewState> get() = _converterViewState
 
@@ -72,14 +72,22 @@ class ConverterViewModel @Inject constructor(
             currencyAbbrev = value.receiveCurrencyLabel,
             currencyValue = value.receiveCurrencyData
         )
-        when (convertUserWalletCurrencyUseCase(
+        val result = convertUserWalletCurrencyUseCase(
             sellWalletSchema = sellWalletSchema,
             buyWalletSchema = buyWalletSchema,
-        )) {
+        )
+        when (result) {
             is ConvertUserWalletResultSchema.Error -> TODO()
             is ConvertUserWalletResultSchema.Loading -> TODO()
             is ConvertUserWalletResultSchema.Success -> {
                 updateWalletBalance()
+
+                sendEvent(
+                    Event.ShowSnackbarString(
+                        "You have converted ${result.sellData.currencyValue} ${result.sellData.currencyAbbrev} " +
+                            "to ${result.buyData.currencyValue} ${result.buyData.currencyAbbrev}. Commission Fee - ${result.commissionCharged} ${result.sellData.currencyAbbrev}."
+                    )
+                )
             }
         }
     }

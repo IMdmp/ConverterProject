@@ -17,26 +17,34 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.Scaffold
+import androidx.compose.material.ScaffoldState
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.SwapVerticalCircle
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.imdmp.converter.base.BaseViewModel
 import com.imdmp.converter.schema.WalletSchema
+import kotlinx.coroutines.flow.collectLatest
 
 enum class TransactionType {
     SELL, RECEIVE
 }
 
+@ExperimentalComposeUiApi
 @Composable
 fun ConverterScreen(
     converterViewModel: ConverterViewModel,
@@ -45,6 +53,23 @@ fun ConverterScreen(
     val viewState =
         converterViewModel.converterViewState.observeAsState(ConverterViewState.init()).value
     val walletListState = converterViewModel.walletBalance.observeAsState().value
+    val state = rememberScaffoldState()
+
+    LaunchedEffect(key1 = Unit) {
+        converterViewModel.eventsFlow.collectLatest { value ->
+            when (value) {
+                // Handle events
+                is BaseViewModel.Event.ShowSnackbarString -> {
+                    state.snackbarHostState.showSnackbar(
+                        value.message
+                    )
+                }
+            }
+        }
+    }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     ConverterScreen(
         viewState = viewState,
         walletList = walletListState?.toList() ?: listOf(),
@@ -52,8 +77,10 @@ fun ConverterScreen(
         switchCurrency = {
             converterViewModel.switchCurrency()
         },
+        scaffoldState = state,
         convertData = {
             converterViewModel.convertCurrency()
+            keyboardController?.hide()
         }) {
         converterScreenActivityCallbacks.openCurrencyPicker(transactionType = it)
     }
@@ -64,6 +91,7 @@ private fun ConverterScreen(
     viewState: ConverterViewState,
     walletList: List<WalletSchema>,
     converterScreenCallbacks: ConverterScreenCallbacks,
+    scaffoldState: ScaffoldState,
     convertData: () -> Unit,
     switchCurrency: () -> Unit,
     currencySelected: (t: TransactionType) -> Unit
@@ -73,6 +101,7 @@ private fun ConverterScreen(
     val receiveCurrency = viewState.receiveCurrencyLabel
 
     Scaffold(
+        scaffoldState = scaffoldState,
         topBar = { TopAppBar(title = { Text("Currency Converter") }) }
     ) { it ->
         ConstraintLayout(
@@ -267,6 +296,7 @@ fun PreviewConverterScreen() {
         viewState = ConverterViewState.init(),
         listOf(),
         ConverterScreenCallbacks.default(),
+        rememberScaffoldState(),
         {},
         {}) {}
 }
