@@ -23,10 +23,7 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.SwapVerticalCircle
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -43,39 +40,41 @@ enum class TransactionType {
 @Composable
 fun ConverterScreen(
     converterViewModel: ConverterViewModel,
-    converterScreenCallbacks: ConverterScreenCallbacks
+    converterScreenActivityCallbacks: ConverterScreenActivityCallbacks
 ) {
     val viewState =
         converterViewModel.converterViewState.observeAsState(ConverterViewState.init()).value
     val walletListState = converterViewModel.walletBalance.observeAsState().value
     ConverterScreen(
-        sellCurrency = viewState.sellCurrencyLabel,
-        receiveCurrency = viewState.receiveCurrencyLabel,
+        viewState = viewState,
         walletList = walletListState?.toList() ?: listOf(),
+        converterScreenCallbacks = converterViewModel,
         switchCurrency = {
             converterViewModel.switchCurrency()
         },
         convertData = {
-            converterViewModel.convertData(it.toString())
+            converterViewModel.convertCurrency()
         }) {
-        converterScreenCallbacks.openCurrencyPicker(transactionType = it)
+        converterScreenActivityCallbacks.openCurrencyPicker(transactionType = it)
     }
 }
 
 @Composable
 private fun ConverterScreen(
-    sellCurrency: String,
-    receiveCurrency: String,
+    viewState: ConverterViewState,
     walletList: List<WalletSchema>,
-    convertData: (d: Double) -> Unit,
+    converterScreenCallbacks: ConverterScreenCallbacks,
+    convertData: () -> Unit,
     switchCurrency: () -> Unit,
     currencySelected: (t: TransactionType) -> Unit
 ) {
-    val sellData = remember { mutableStateOf("") }
-    val receiveData = remember { mutableStateOf("") }
+
+    val sellCurrency = viewState.sellCurrencyLabel
+    val receiveCurrency = viewState.receiveCurrencyLabel
+
     Scaffold(
         topBar = { TopAppBar(title = { Text("Currency Converter") }) }
-    ) {
+    ) { it ->
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxSize()
@@ -106,14 +105,22 @@ private fun ConverterScreen(
                 }, text = "Currency Exchange"
             )
 
-            SellRow(
+            ConvertRow(
                 modifier = Modifier
                     .padding(top = 8.dp, bottom = 4.dp)
                     .constrainAs(sellRow) {
                         top.linkTo(currencyLabel.bottom, 16.dp)
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
-                    }, sellCurrency, sellData
+                    },
+                currency = sellCurrency,
+                data = viewState.sellCurrencyData.toString(),
+                type = "Sell",
+                onValueUpdate = { sellData ->
+                    if (sellData.isNotBlank()) {
+                        converterScreenCallbacks.onSellDataUpdated(sellData.toDouble())
+                    }
+                }
             ) {
                 currencySelected(TransactionType.SELL)
             }
@@ -132,13 +139,20 @@ private fun ConverterScreen(
                 Icon(Icons.Rounded.SwapVerticalCircle, "swap currency")
             }
 
-            ReceiveRow(
+            ConvertRow(
                 modifier = Modifier
                     .padding(top = 4.dp, bottom = 8.dp)
                     .constrainAs(receiveRow) {
                         top.linkTo(switchCurrencyButton.bottom)
                     },
-                receiveCurrency, receiveData,
+                currency = receiveCurrency,
+                data = viewState.receiveCurrencyData.toString(),
+                type = "Receive",
+                onValueUpdate = { receiveData ->
+                    if (receiveData.isNotBlank()) {
+                        converterScreenCallbacks.onBuyDataUpdated(receiveData.toDouble())
+                    }
+                }
             ) {
                 currencySelected(TransactionType.RECEIVE)
             }
@@ -152,9 +166,7 @@ private fun ConverterScreen(
                     end.linkTo(parent.end)
                 },
                 onClick = {
-                    if (sellData.value.isNotEmpty()) {
-                        convertData(sellData.value.toDouble())
-                    }
+                    convertData()
                 }) {
                 Text("Submit")
             }
@@ -188,8 +200,9 @@ fun BalanceRow(modifier: Modifier, walletList: List<WalletSchema>) {
 fun ConvertRow(
     modifier: Modifier,
     type: String,
-    data: MutableState<String>,
+    data: String,
     currency: String,
+    onValueUpdate: (s: String) -> Unit,
     onCurrencyClicked: () -> Unit
 ) {
     Row(
@@ -205,6 +218,7 @@ fun ConvertRow(
             modifier.weight(0.8f),
             data = data,
             currency = currency,
+            onValueUpdate = onValueUpdate,
             onCurrencyClicked = onCurrencyClicked
         )
     }
@@ -218,8 +232,9 @@ private fun ConvertRowLabel(modifier: Modifier = Modifier, type: String) {
 @Composable
 fun ConvertRowDataExchange(
     modifier: Modifier = Modifier,
-    data: MutableState<String>,
+    data: String,
     currency: String,
+    onValueUpdate: (s: String) -> Unit = {},
     onCurrencyClicked: () -> Unit
 ) {
 
@@ -229,11 +244,13 @@ fun ConvertRowDataExchange(
     ) {
         TextField(
             modifier = Modifier.width(240.dp),
-            value = data.value,
+            value = data,
             textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.End),
             keyboardOptions =
             KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal),
-            onValueChange = { s: String -> data.value = s })
+            onValueChange = { s: String ->
+                onValueUpdate(s)
+            })
 
         Text(currency, Modifier
             .padding(start = 16.dp)
@@ -243,28 +260,13 @@ fun ConvertRowDataExchange(
     }
 }
 
-@Composable
-fun SellRow(
-    modifier: Modifier,
-    currency: String,
-    data: MutableState<String>,
-    onCurrencyClicked: () -> Unit
-) {
-    ConvertRow(modifier = modifier, "Sell", data, currency, onCurrencyClicked)
-}
-
-@Composable
-fun ReceiveRow(
-    modifier: Modifier,
-    currency: String,
-    data: MutableState<String>,
-    onCurrencyClicked: () -> Unit
-) {
-    ConvertRow(modifier = modifier, "Receive", data, currency, onCurrencyClicked)
-}
-
 @Preview
 @Composable
 fun PreviewConverterScreen() {
-    ConverterScreen(sellCurrency = "EUR", receiveCurrency = "USD", listOf(), {}, {}) {}
+    ConverterScreen(
+        viewState = ConverterViewState.init(),
+        listOf(),
+        ConverterScreenCallbacks.default(),
+        {},
+        {}) {}
 }

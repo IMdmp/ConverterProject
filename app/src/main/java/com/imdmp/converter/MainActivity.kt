@@ -5,7 +5,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.fragment.app.FragmentActivity
 import com.imdmp.converter.features.mainscreen.ConverterScreen
-import com.imdmp.converter.features.mainscreen.ConverterScreenCallbacks
+import com.imdmp.converter.features.mainscreen.ConverterScreenActivityCallbacks
 import com.imdmp.converter.features.mainscreen.ConverterViewModel
 import com.imdmp.converter.features.mainscreen.TransactionType
 import com.imdmp.converter.features.mainscreen.currencypicker.CurrencyModel
@@ -27,7 +27,7 @@ class MainActivity: FragmentActivity() {
 
         setContent {
             ConverterTheme {
-                ConverterScreen(converterViewModel, object: ConverterScreenCallbacks {
+                ConverterScreen(converterViewModel, object: ConverterScreenActivityCallbacks {
                     override fun openCurrencyPicker(transactionType: TransactionType) {
                         openBottomSheet(transactionType)
                     }
