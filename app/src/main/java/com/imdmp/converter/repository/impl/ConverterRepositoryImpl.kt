@@ -53,4 +53,7 @@ class ConverterRepositoryImpl @Inject constructor(
         convertRecordDAO.insertRecord(transactionSchema.ToConvertRecordEntity())
     }
 
+    override suspend fun getNumberOfTransactions(): Int {
+        return convertRecordDAO.getRecordCount()
+    }
 }

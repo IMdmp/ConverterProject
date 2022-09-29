@@ -1,6 +1,5 @@
 package com.imdmp.converter.base.di
 
-import com.imdmp.converter.usecase.CommissionCheckUseCase
 import com.imdmp.converter.usecase.ConvertCurrencyUseCase
 import com.imdmp.converter.usecase.ConvertUserWalletCurrencyUseCase
 import com.imdmp.converter.usecase.FirstTimeSetupUseCase
@@ -10,7 +9,6 @@ import com.imdmp.converter.usecase.GetWalletBalanceUseCase
 import com.imdmp.converter.usecase.PullRatesAndSaveCurrenciesUseCase
 import com.imdmp.converter.usecase.SaveTransactionUseCase
 import com.imdmp.converter.usecase.UpdateWalletUseCase
-import com.imdmp.converter.usecase.impl.CommissionCheckUseCaseImpl
 import com.imdmp.converter.usecase.impl.ConvertCurrencyUseCaseImpl
 import com.imdmp.converter.usecase.impl.ConvertUserWalletCurrencyUseCaseImpl
 import com.imdmp.converter.usecase.impl.FirstTimeSetupUseCaseImpl
@@ -58,11 +56,6 @@ abstract class UseCaseModule {
     abstract fun bindUpdateWalletUseCase(
         updateWalletUseCase: UpdateWalletUseCaseImpl
     ): UpdateWalletUseCase
-
-    @Binds
-    abstract fun bindCommissionCheckUseCase(
-        commissionCheckUseCase: CommissionCheckUseCaseImpl
-    ): CommissionCheckUseCase
 
     @Binds
     abstract fun bindConvertUserWalletCurrencyUseCase(

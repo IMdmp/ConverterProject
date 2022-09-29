@@ -7,16 +7,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.imdmp.converter.base.BaseViewModel
 import com.imdmp.converter.features.mainscreen.currencypicker.CurrencyModel
-import com.imdmp.converter.schema.CommissionCheckResultSchema
 import com.imdmp.converter.schema.ConvertUserWalletResultSchema
-import com.imdmp.converter.schema.TransactionSchema
 import com.imdmp.converter.schema.WalletSchema
-import com.imdmp.converter.usecase.CommissionCheckUseCase
 import com.imdmp.converter.usecase.ConvertCurrencyUseCase
 import com.imdmp.converter.usecase.ConvertUserWalletCurrencyUseCase
 import com.imdmp.converter.usecase.GetWalletBalanceUseCase
-import com.imdmp.converter.usecase.SaveTransactionUseCase
-import com.imdmp.converter.usecase.UpdateWalletUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,9 +22,6 @@ import javax.inject.Inject
 class ConverterViewModel @Inject constructor(
     private val convertCurrencyUseCase: ConvertCurrencyUseCase,
     private val getWalletBalanceUseCase: GetWalletBalanceUseCase,
-    private val updateWalletUseCase: UpdateWalletUseCase,
-    private val commissionCheckUseCase: CommissionCheckUseCase,
-    private val saveTransactionUseCase: SaveTransactionUseCase,
     private val convertUserWalletCurrencyUseCase: ConvertUserWalletCurrencyUseCase,
 ): BaseViewModel(), ConverterScreenCallbacks {
     private val _converterViewState = MutableLiveData(ConverterViewState.init())
@@ -38,7 +30,7 @@ class ConverterViewModel @Inject constructor(
     private val _walletBalance = MutableLiveData<SnapshotStateList<WalletSchema>>()
     val walletBalance: LiveData<SnapshotStateList<WalletSchema>> get() = _walletBalance
 
-    var isLoading = MutableLiveData<Boolean>(false)
+    var isLoading = MutableLiveData(false)
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -48,61 +40,39 @@ class ConverterViewModel @Inject constructor(
 
     fun convertCurrency() {
         viewModelScope.launch(Dispatchers.IO) {
-            commissionCheckUseCase().collect { result ->
+            val value = converterViewState.value!!
+            val sellWalletSchema = WalletSchema(
+                currencyAbbrev = value.sellCurrencyLabel,
+                currencyValue = value.sellCurrencyData
+            )
+            val buyWalletSchema = WalletSchema(
+                currencyAbbrev = value.receiveCurrencyLabel,
+                currencyValue = value.receiveCurrencyData
+            )
+
+            convertUserWalletCurrencyUseCase(
+                sellWalletSchema = sellWalletSchema,
+                buyWalletSchema = buyWalletSchema,
+            ).collect { result ->
                 when (result) {
-                    is CommissionCheckResultSchema.Error -> {
+                    is ConvertUserWalletResultSchema.Error -> {
+                        isLoading.postValue(false)
                         sendEvent(Event.ShowError)
                     }
-                    is CommissionCheckResultSchema.Loading -> {
-                        withContext(Dispatchers.Main) {
-                            isLoading.postValue(true)
-                        }
+                    is ConvertUserWalletResultSchema.Loading -> {
+                        isLoading.postValue(true)
                     }
-                    is CommissionCheckResultSchema.Success -> {
-                        withContext(Dispatchers.Main) {
-                            isLoading.postValue(false)
-                        }
-
-                        commissionCheckSuccessful()
+                    is ConvertUserWalletResultSchema.Success -> {
+                        isLoading.postValue(false)
+                        updateWalletBalance()
+                        sendEvent(
+                            Event.ShowSnackbarString(
+                                "You have converted ${result.sellData.currencyValue} ${result.sellData.currencyAbbrev} " +
+                                    "to ${result.buyData.currencyValue} ${result.buyData.currencyAbbrev}. Commission Fee - ${result.commissionCharged} ${result.sellData.currencyAbbrev}."
+                            )
+                        )
                     }
                 }
-            }
-        }
-    }
-
-    private suspend fun commissionCheckSuccessful() {
-        val value = converterViewState.value!!
-        val sellWalletSchema = WalletSchema(
-            currencyAbbrev = value.sellCurrencyLabel,
-            currencyValue = value.sellCurrencyData
-        )
-
-        val buyWalletSchema = WalletSchema(
-            currencyAbbrev = value.receiveCurrencyLabel,
-            currencyValue = value.receiveCurrencyData
-        )
-        val result = convertUserWalletCurrencyUseCase(
-            sellWalletSchema = sellWalletSchema,
-            buyWalletSchema = buyWalletSchema,
-        )
-        when (result) {
-            is ConvertUserWalletResultSchema.Error -> TODO()
-            is ConvertUserWalletResultSchema.Loading -> TODO()
-            is ConvertUserWalletResultSchema.Success -> {
-                updateWalletBalance()
-                saveTransactionUseCase(
-                    TransactionSchema(
-                        result.sellData,
-                        result.buyData
-                    )
-                )
-
-                sendEvent(
-                    Event.ShowSnackbarString(
-                        "You have converted ${result.sellData.currencyValue} ${result.sellData.currencyAbbrev} " +
-                            "to ${result.buyData.currencyValue} ${result.buyData.currencyAbbrev}. Commission Fee - ${result.commissionCharged} ${result.sellData.currencyAbbrev}."
-                    )
-                )
             }
         }
     }
