@@ -19,5 +19,6 @@ abstract class BaseViewModel: ViewModel() {
     sealed class Event {
         //        data class ShowSnackbarResource(val resource: Int): Event()
         data class ShowSnackbarString(val message: String): Event()
+        object ShowError: Event()
     }
 }

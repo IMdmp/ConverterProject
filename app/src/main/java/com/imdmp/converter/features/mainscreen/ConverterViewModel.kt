@@ -9,11 +9,13 @@ import com.imdmp.converter.base.BaseViewModel
 import com.imdmp.converter.features.mainscreen.currencypicker.CurrencyModel
 import com.imdmp.converter.schema.CommissionCheckResultSchema
 import com.imdmp.converter.schema.ConvertUserWalletResultSchema
+import com.imdmp.converter.schema.TransactionSchema
 import com.imdmp.converter.schema.WalletSchema
 import com.imdmp.converter.usecase.CommissionCheckUseCase
 import com.imdmp.converter.usecase.ConvertCurrencyUseCase
 import com.imdmp.converter.usecase.ConvertUserWalletCurrencyUseCase
 import com.imdmp.converter.usecase.GetWalletBalanceUseCase
+import com.imdmp.converter.usecase.SaveTransactionUseCase
 import com.imdmp.converter.usecase.UpdateWalletUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -27,21 +29,18 @@ class ConverterViewModel @Inject constructor(
     private val getWalletBalanceUseCase: GetWalletBalanceUseCase,
     private val updateWalletUseCase: UpdateWalletUseCase,
     private val commissionCheckUseCase: CommissionCheckUseCase,
+    private val saveTransactionUseCase: SaveTransactionUseCase,
     private val convertUserWalletCurrencyUseCase: ConvertUserWalletCurrencyUseCase,
 ): BaseViewModel(), ConverterScreenCallbacks {
-    private val _converterViewState = MutableLiveData<ConverterViewState>()
+    private val _converterViewState = MutableLiveData(ConverterViewState.init())
     val converterViewState: LiveData<ConverterViewState> get() = _converterViewState
 
     private val _walletBalance = MutableLiveData<SnapshotStateList<WalletSchema>>()
     val walletBalance: LiveData<SnapshotStateList<WalletSchema>> get() = _walletBalance
 
+    var isLoading = MutableLiveData<Boolean>(false)
+
     init {
-        _converterViewState.value = ConverterViewState.init().copy(
-            sellCurrencyLabel = "EUR",
-            sellCurrencyData = 0.0,
-            receiveCurrencyLabel = "USD",
-            receiveCurrencyData = 0.0,
-        )
         viewModelScope.launch(Dispatchers.IO) {
             updateWalletBalance()
         }
@@ -49,11 +48,21 @@ class ConverterViewModel @Inject constructor(
 
     fun convertCurrency() {
         viewModelScope.launch(Dispatchers.IO) {
-            converterViewState.value?.let {
-                when (commissionCheckUseCase()) {
-                    is CommissionCheckResultSchema.Error -> TODO()
-                    is CommissionCheckResultSchema.Loading -> TODO()
+            commissionCheckUseCase().collect { result ->
+                when (result) {
+                    is CommissionCheckResultSchema.Error -> {
+                        sendEvent(Event.ShowError)
+                    }
+                    is CommissionCheckResultSchema.Loading -> {
+                        withContext(Dispatchers.Main) {
+                            isLoading.postValue(true)
+                        }
+                    }
                     is CommissionCheckResultSchema.Success -> {
+                        withContext(Dispatchers.Main) {
+                            isLoading.postValue(false)
+                        }
+
                         commissionCheckSuccessful()
                     }
                 }
@@ -81,6 +90,12 @@ class ConverterViewModel @Inject constructor(
             is ConvertUserWalletResultSchema.Loading -> TODO()
             is ConvertUserWalletResultSchema.Success -> {
                 updateWalletBalance()
+                saveTransactionUseCase(
+                    TransactionSchema(
+                        result.sellData,
+                        result.buyData
+                    )
+                )
 
                 sendEvent(
                     Event.ShowSnackbarString(

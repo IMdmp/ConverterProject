@@ -15,8 +15,16 @@ class ConvertUserWalletCurrencyUseCaseImpl @Inject constructor(
         sellWalletSchema: WalletSchema,
         buyWalletSchema: WalletSchema
     ): ConvertUserWalletResultSchema {
-        val userSellBalance = converterRepository.getWalletBalance(sellWalletSchema.currencyAbbrev)
-        val userBuyBalance = converterRepository.getWalletBalance(buyWalletSchema.currencyAbbrev)
+        val userSellBalance =
+            converterRepository.getWalletBalance(sellWalletSchema.currencyAbbrev) ?: WalletSchema(
+                sellWalletSchema.currencyAbbrev,
+                0.0
+            )
+        val userBuyBalance =
+            converterRepository.getWalletBalance(buyWalletSchema.currencyAbbrev) ?: WalletSchema(
+                buyWalletSchema.currencyAbbrev,
+                0.0
+            )
 
         val commissionCharge = getCommissionChargeUseCase(sellWalletSchema.currencyValue)
 

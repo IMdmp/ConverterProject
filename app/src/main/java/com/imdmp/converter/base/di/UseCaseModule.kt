@@ -8,6 +8,7 @@ import com.imdmp.converter.usecase.GetAvailableCurrenciesUseCase
 import com.imdmp.converter.usecase.GetCommissionChargeUseCase
 import com.imdmp.converter.usecase.GetWalletBalanceUseCase
 import com.imdmp.converter.usecase.PullRatesAndSaveCurrenciesUseCase
+import com.imdmp.converter.usecase.SaveTransactionUseCase
 import com.imdmp.converter.usecase.UpdateWalletUseCase
 import com.imdmp.converter.usecase.impl.CommissionCheckUseCaseImpl
 import com.imdmp.converter.usecase.impl.ConvertCurrencyUseCaseImpl
@@ -17,6 +18,7 @@ import com.imdmp.converter.usecase.impl.GetAvailableCurrenciesUseCaseImpl
 import com.imdmp.converter.usecase.impl.GetCommissionChargeUseCaseImpl
 import com.imdmp.converter.usecase.impl.GetWalletBalanceUseCaseImpl
 import com.imdmp.converter.usecase.impl.PullRatesAndSaveCurrenciesUseCaseImpl
+import com.imdmp.converter.usecase.impl.SaveTransactionUseCaseImpl
 import com.imdmp.converter.usecase.impl.UpdateWalletUseCaseImpl
 import dagger.Binds
 import dagger.Module
@@ -72,4 +74,8 @@ abstract class UseCaseModule {
         getCommissionChargeUseCase: GetCommissionChargeUseCaseImpl
     ): GetCommissionChargeUseCase
 
+    @Binds
+    abstract fun bindSaveTransactionUseCase(
+        saveTransactionUseCase: SaveTransactionUseCaseImpl
+    ): SaveTransactionUseCase
 }

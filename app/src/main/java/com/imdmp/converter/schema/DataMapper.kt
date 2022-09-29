@@ -1,11 +1,16 @@
 package com.imdmp.converter.schema
 
+import com.imdmp.converter.repository.database.entity.ConvertRecordEntity
 import com.imdmp.converter.repository.database.entity.WalletEntity
 import org.json.JSONException
 import org.json.JSONObject
 import java.math.BigDecimal
 
-fun WalletEntity.convertToWalletSchema(): WalletSchema {
+fun WalletEntity?.convertToWalletSchema(): WalletSchema? {
+    if (this == null) {
+        return null
+    }
+
     return WalletSchema(
         this.currency,
         this.balance
@@ -44,4 +49,11 @@ fun JSONObject.toMap(): Map<String, Any> {
         map[key] = value
     }
     return map
+}
+
+fun TransactionSchema.ToConvertRecordEntity(): ConvertRecordEntity {
+    return ConvertRecordEntity(
+        sellData = this.sellWalletData.convertToWalletEntity(),
+        buyData = this.buyWalletData.convertToWalletEntity()
+    )
 }

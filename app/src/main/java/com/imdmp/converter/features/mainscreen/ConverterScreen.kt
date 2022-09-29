@@ -3,6 +3,7 @@ package com.imdmp.converter.features.mainscreen
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +17,7 @@ import androidx.compose.material.Button
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.LocalTextStyle
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.Text
@@ -28,9 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,7 +44,6 @@ enum class TransactionType {
     SELL, RECEIVE
 }
 
-@ExperimentalComposeUiApi
 @Composable
 fun ConverterScreen(
     converterViewModel: ConverterViewModel,
@@ -54,6 +53,7 @@ fun ConverterScreen(
         converterViewModel.converterViewState.observeAsState(ConverterViewState.init()).value
     val walletListState = converterViewModel.walletBalance.observeAsState().value
     val state = rememberScaffoldState()
+    val isLoading = converterViewModel.isLoading.observeAsState().value ?: false
 
     LaunchedEffect(key1 = Unit) {
         converterViewModel.eventsFlow.collectLatest { value ->
@@ -64,13 +64,18 @@ fun ConverterScreen(
                         value.message
                     )
                 }
+
+                is BaseViewModel.Event.ShowError -> {
+                    state.snackbarHostState.showSnackbar(
+                        "ERROR!"
+                    )
+                }
             }
         }
     }
 
-    val keyboardController = LocalSoftwareKeyboardController.current
-
     ConverterScreen(
+        isLoading = isLoading,
         viewState = viewState,
         walletList = walletListState?.toList() ?: listOf(),
         converterScreenCallbacks = converterViewModel,
@@ -80,7 +85,7 @@ fun ConverterScreen(
         scaffoldState = state,
         convertData = {
             converterViewModel.convertCurrency()
-            keyboardController?.hide()
+            converterScreenActivityCallbacks.hideKeyboard()
         }) {
         converterScreenActivityCallbacks.openCurrencyPicker(transactionType = it)
     }
@@ -88,6 +93,7 @@ fun ConverterScreen(
 
 @Composable
 private fun ConverterScreen(
+    isLoading: Boolean,
     viewState: ConverterViewState,
     walletList: List<WalletSchema>,
     converterScreenCallbacks: ConverterScreenCallbacks,
@@ -202,6 +208,12 @@ private fun ConverterScreen(
 
         }
     }
+
+    if (isLoading) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(style = MaterialTheme.typography.h1, text = "currently loading.")
+        }
+    }
 }
 
 @Composable
@@ -293,6 +305,7 @@ fun ConvertRowDataExchange(
 @Composable
 fun PreviewConverterScreen() {
     ConverterScreen(
+        isLoading = false,
         viewState = ConverterViewState.init(),
         listOf(),
         ConverterScreenCallbacks.default(),
