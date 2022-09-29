@@ -47,6 +47,7 @@ class ConverterApp: Application() {
         }
     }
 
+
     private fun firstTimeSetupNotFinished(sp: SharedPreferences): Boolean {
         return sp.getBoolean(FIRST_TIME_SETUP_DONE, false).not()
     }
@@ -71,6 +72,7 @@ class ConverterApp: Application() {
     private fun finishSetupPreConfig(sharedPreferences: SharedPreferences) {
         with(sharedPreferences.edit()) {
             putBoolean(FIRST_TIME_SETUP_DONE, true)
+            apply()
         }
     }
 }

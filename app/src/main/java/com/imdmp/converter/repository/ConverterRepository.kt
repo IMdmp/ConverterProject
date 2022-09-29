@@ -8,4 +8,6 @@ interface ConverterRepository {
     suspend fun pullLatestRates(): PullLatestRatesSchema
     suspend fun saveCurrencyIdList(currencyList: List<CurrencySchema>)
     suspend fun getWalletBalance(): List<WalletSchema>
+    suspend fun updateWalletBalance(walletSchema: WalletSchema)
+    suspend fun getWalletBalance(currencyId: String): WalletSchema
 }

@@ -9,6 +9,7 @@ import com.imdmp.converter.schema.CurrencySchema
 import com.imdmp.converter.schema.PullLatestRatesSchema
 import com.imdmp.converter.schema.WalletSchema
 import com.imdmp.converter.schema.convertToPullLatestRatesSchema
+import com.imdmp.converter.schema.convertToWalletEntity
 import com.imdmp.converter.schema.convertToWalletSchema
 import org.json.JSONObject
 import javax.inject.Inject
@@ -34,6 +35,14 @@ class ConverterRepositoryImpl @Inject constructor(
         return walletDAO.getAllWalletData().map {
             it.convertToWalletSchema()
         }
+    }
+
+    override suspend fun getWalletBalance(currencyId: String): WalletSchema {
+        return walletDAO.getWallet(currencyId).convertToWalletSchema()
+    }
+
+    override suspend fun updateWalletBalance(walletSchema: WalletSchema) {
+        walletDAO.insertWallet(walletSchema.convertToWalletEntity())
     }
 
 }

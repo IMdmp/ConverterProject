@@ -12,6 +12,13 @@ fun WalletEntity.convertToWalletSchema(): WalletSchema {
     )
 }
 
+fun WalletSchema.convertToWalletEntity(): WalletEntity {
+    return WalletEntity(
+        this.currencyAbbrev,
+        this.currencyValue
+    )
+}
+
 fun JSONObject.convertToPullLatestRatesSchema(): PullLatestRatesSchema {
     val rateObject: JSONObject = this.get("rates") as JSONObject
     val rateMap = rateObject.toMap()

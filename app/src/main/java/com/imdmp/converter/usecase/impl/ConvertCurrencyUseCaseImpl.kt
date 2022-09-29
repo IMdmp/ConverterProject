@@ -1,7 +1,6 @@
 package com.imdmp.converter.usecase.impl
 
 import com.imdmp.converter.usecase.ConvertCurrencyUseCase
-import java.math.BigDecimal
 import javax.inject.Inject
 
 
@@ -10,11 +9,11 @@ class ConvertCurrencyUseCaseImpl @Inject constructor(): ConvertCurrencyUseCase {
         sellData: Double,
         sellCurrencyId: String,
         receiveCurrencyId: String
-    ): BigDecimal {
+    ): Double {
         val returnData = sellData + 10
 
 
-        return returnData.toBigDecimal()
+        return returnData
     }
 
 
