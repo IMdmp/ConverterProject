@@ -95,7 +95,7 @@ class DataMapperKtTest {
 
         val result = entity.toTransactionSchema()
 
-        assertEquals(expectedSellEntity, result.sellWalletData)
-        assertEquals(expectedBuyEntity, result.buyWalletData)
+        assertEquals(expectedSellEntity.convertToWalletSchema(), result.sellWalletData)
+        assertEquals(expectedBuyEntity.convertToWalletSchema(), result.buyWalletData)
     }
 }
