@@ -10,7 +10,7 @@ import com.imdmp.converter.repository.database.entity.CurrencyEntity
 interface CurrencyDAO {
 
     @Query("SELECT * FROM currency")
-    fun getAllCurrencies(): List<CurrencyEntity>
+    fun getAllCurrencies(): List<CurrencyEntity>?
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insertAllCurrencies(currencyEntityList: List<CurrencyEntity>)

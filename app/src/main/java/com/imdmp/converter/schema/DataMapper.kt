@@ -1,5 +1,7 @@
 package com.imdmp.converter.schema
 
+import com.imdmp.converter.repository.database.entity.ConvertRecordEntity
+import com.imdmp.converter.repository.database.entity.CurrencyEntity
 import com.imdmp.converter.repository.database.entity.WalletEntity
 import org.json.JSONException
 import org.json.JSONObject
@@ -19,14 +21,26 @@ fun WalletSchema.convertToWalletEntity(): WalletEntity {
     )
 }
 
-fun JSONObject.convertToPullLatestRatesSchema(): PullLatestRatesSchema {
+fun CurrencySchema.convertToCurrencyEntity(): CurrencyEntity {
+    return CurrencyEntity(this.currencyAbbrev)
+}
+
+fun TransactionSchema.toConvertRecordEntity(): ConvertRecordEntity {
+    return ConvertRecordEntity(
+        sellData = this.sellWalletData.convertToWalletEntity(),
+        buyData = this.buyWalletData.convertToWalletEntity()
+    )
+}
+
+@Suppress("UNCHECKED_CAST")
+fun JSONObject.convertToPullLatestRatesSchema(): PullLatestRatesSchema { //used for unit test
     val rateObject: JSONObject = this.get("rates") as JSONObject
-    val rateMap = rateObject.toMap()
+    val rateMap: Map<String, BigDecimal> = rateObject.toMap() as Map<String, BigDecimal>
 
     return PullLatestRatesSchema(
         base = this.getString("base"),
         date = this.getString("date"),
-        rates = rateMap as Map<String, BigDecimal>,
+        rates = rateMap,
         timestamp = this.getInt("timestamp")
     )
 }

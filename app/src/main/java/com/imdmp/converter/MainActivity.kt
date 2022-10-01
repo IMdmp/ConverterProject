@@ -1,6 +1,9 @@
 package com.imdmp.converter
 
+import android.content.Context
 import android.os.Bundle
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.fragment.app.FragmentActivity
@@ -30,6 +33,14 @@ class MainActivity: FragmentActivity() {
                 ConverterScreen(converterViewModel, object: ConverterScreenActivityCallbacks {
                     override fun openCurrencyPicker(transactionType: TransactionType) {
                         openBottomSheet(transactionType)
+                    }
+
+                    override fun hideKeyboard() {
+                        val view: View = this@MainActivity.findViewById(android.R.id.content)
+
+                        val imm: InputMethodManager =
+                            this@MainActivity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                        imm.hideSoftInputFromWindow(view.windowToken, 0)
                     }
                 })
             }

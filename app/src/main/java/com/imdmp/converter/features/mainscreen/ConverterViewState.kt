@@ -13,9 +13,9 @@ data class ConverterViewState(
         fun init(): ConverterViewState {
             return ConverterViewState(
                 converterDataLoading = false,
-                sellCurrencyLabel = "",
+                sellCurrencyLabel = "EUR",
                 sellCurrencyData = 0.0,
-                receiveCurrencyLabel = "",
+                receiveCurrencyLabel = "USD",
                 receiveCurrencyData = 0.0,
                 errorPresent = false,
                 errorMessage = null,

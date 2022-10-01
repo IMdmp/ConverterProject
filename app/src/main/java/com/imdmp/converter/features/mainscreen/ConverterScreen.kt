@@ -3,6 +3,7 @@ package com.imdmp.converter.features.mainscreen
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,13 +17,17 @@ import androidx.compose.material.Button
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.LocalTextStyle
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
+import androidx.compose.material.ScaffoldState
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.SwapVerticalCircle
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,7 +36,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.imdmp.converter.base.BaseViewModel
 import com.imdmp.converter.schema.WalletSchema
+import kotlinx.coroutines.flow.collectLatest
 
 enum class TransactionType {
     SELL, RECEIVE
@@ -45,15 +52,40 @@ fun ConverterScreen(
     val viewState =
         converterViewModel.converterViewState.observeAsState(ConverterViewState.init()).value
     val walletListState = converterViewModel.walletBalance.observeAsState().value
+    val state = rememberScaffoldState()
+    val isLoading = converterViewModel.isLoading.observeAsState().value ?: false
+
+    LaunchedEffect(key1 = Unit) {
+        converterViewModel.eventsFlow.collectLatest { value ->
+            when (value) {
+                // Handle events
+                is BaseViewModel.Event.ShowSnackbarString -> {
+                    state.snackbarHostState.showSnackbar(
+                        value.message
+                    )
+                }
+
+                is BaseViewModel.Event.ShowError -> {
+                    state.snackbarHostState.showSnackbar(
+                        "ERROR!"
+                    )
+                }
+            }
+        }
+    }
+
     ConverterScreen(
+        isLoading = isLoading,
         viewState = viewState,
         walletList = walletListState?.toList() ?: listOf(),
         converterScreenCallbacks = converterViewModel,
         switchCurrency = {
             converterViewModel.switchCurrency()
         },
+        scaffoldState = state,
         convertData = {
             converterViewModel.convertCurrency()
+            converterScreenActivityCallbacks.hideKeyboard()
         }) {
         converterScreenActivityCallbacks.openCurrencyPicker(transactionType = it)
     }
@@ -61,9 +93,11 @@ fun ConverterScreen(
 
 @Composable
 private fun ConverterScreen(
+    isLoading: Boolean,
     viewState: ConverterViewState,
     walletList: List<WalletSchema>,
     converterScreenCallbacks: ConverterScreenCallbacks,
+    scaffoldState: ScaffoldState,
     convertData: () -> Unit,
     switchCurrency: () -> Unit,
     currencySelected: (t: TransactionType) -> Unit
@@ -73,6 +107,7 @@ private fun ConverterScreen(
     val receiveCurrency = viewState.receiveCurrencyLabel
 
     Scaffold(
+        scaffoldState = scaffoldState,
         topBar = { TopAppBar(title = { Text("Currency Converter") }) }
     ) { it ->
         ConstraintLayout(
@@ -173,6 +208,12 @@ private fun ConverterScreen(
 
         }
     }
+
+    if (isLoading) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(style = MaterialTheme.typography.h1, text = "currently loading.")
+        }
+    }
 }
 
 @Composable
@@ -264,9 +305,11 @@ fun ConvertRowDataExchange(
 @Composable
 fun PreviewConverterScreen() {
     ConverterScreen(
+        isLoading = false,
         viewState = ConverterViewState.init(),
         listOf(),
         ConverterScreenCallbacks.default(),
+        rememberScaffoldState(),
         {},
         {}) {}
 }

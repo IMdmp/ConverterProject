@@ -9,6 +9,6 @@ class GetWalletBalanceUseCaseImpl @Inject constructor(
     private val converterRepository: ConverterRepository
 ): GetWalletBalanceUseCase {
     override suspend fun invoke(): List<WalletSchema> {
-        return converterRepository.getWalletBalance()
+        return converterRepository.getWalletBalance() ?: listOf()
     }
 }
