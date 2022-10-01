@@ -1,5 +1,6 @@
 package com.imdmp.converter.schema
 
+import com.imdmp.converter.repository.database.entity.ConvertRecordEntity
 import com.imdmp.converter.repository.database.entity.WalletEntity
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -67,5 +68,34 @@ class DataMapperKtTest {
 
         assertEquals(schema.buyWalletData.convertToWalletEntity(), resultEntity.buyData)
         assertEquals(schema.sellWalletData.convertToWalletEntity(), resultEntity.sellData)
+    }
+
+    @Test
+    fun `ConvertRecordEntity converts to TransactionSchema correctly`() {
+
+        val expectedCurrency = "EUR"
+        val expectedBalance = Random.nextDouble()
+
+        val expectedCurrency2 = "ABC"
+        val expectedBalance2 = Random.nextDouble()
+
+        val expectedSellEntity = WalletEntity(
+            currency = expectedCurrency,
+            balance = expectedBalance
+        )
+
+        val expectedBuyEntity = WalletEntity(
+            currency = expectedCurrency2,
+            balance = expectedBalance2
+        )
+
+        val entity = ConvertRecordEntity(
+            id = 0, sellData = expectedSellEntity, buyData = expectedBuyEntity
+        )
+
+        val result = entity.toTransactionSchema()
+
+        assertEquals(expectedSellEntity, result.sellWalletData)
+        assertEquals(expectedBuyEntity, result.buyWalletData)
     }
 }

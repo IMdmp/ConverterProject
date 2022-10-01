@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import com.imdmp.converter.repository.database.entity.ConvertRecordEntity
+import com.imdmp.converter.repository.database.entity.WalletEntity
 
 @Dao
 interface ConvertRecordDAO {
@@ -16,5 +17,8 @@ interface ConvertRecordDAO {
 
     @Insert
     fun insertRecord(convertRecordEntity: ConvertRecordEntity)
+
+    @Query("SELECT * FROM convertrecord WHERE sellData =:walletEntity")
+    fun getTransactionsWithCurrencyLike(walletEntity: WalletEntity): List<ConvertRecordEntity>
 
 }

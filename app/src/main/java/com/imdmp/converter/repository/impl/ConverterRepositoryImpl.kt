@@ -14,6 +14,7 @@ import com.imdmp.converter.schema.convertToPullLatestRatesSchema
 import com.imdmp.converter.schema.convertToWalletEntity
 import com.imdmp.converter.schema.convertToWalletSchema
 import com.imdmp.converter.schema.toConvertRecordEntity
+import com.imdmp.converter.schema.toTransactionSchema
 import org.json.JSONObject
 import javax.inject.Inject
 
@@ -55,5 +56,18 @@ class ConverterRepositoryImpl @Inject constructor(
 
     override suspend fun getNumberOfTransactions(): Int {
         return convertRecordDAO.getRecordCount() ?: 0
+    }
+
+    override suspend fun getTransactionsWithCurrencyLike(walletSchema: WalletSchema): List<TransactionSchema> {
+        return convertRecordDAO.getTransactionsWithCurrencyLike(walletSchema.convertToWalletEntity())
+            .map {
+                it.toTransactionSchema()
+            }
+    }
+
+    override suspend fun getAllTransactions(walletSchema: WalletSchema): List<TransactionSchema> {
+        return convertRecordDAO.getAllRecords()?.map {
+            it.toTransactionSchema()
+        } ?: listOf()
     }
 }
