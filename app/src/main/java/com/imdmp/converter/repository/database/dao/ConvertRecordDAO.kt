@@ -9,10 +9,10 @@ import com.imdmp.converter.repository.database.entity.ConvertRecordEntity
 interface ConvertRecordDAO {
 
     @Query("SELECT * FROM convertrecord")
-    fun getAllRecords(): List<ConvertRecordEntity>
+    fun getAllRecords(): List<ConvertRecordEntity>?
 
     @Query("SELECT COUNT(*) FROM convertrecord")
-    fun getRecordCount(): Int
+    fun getRecordCount(): Int?
 
     @Insert
     fun insertRecord(convertRecordEntity: ConvertRecordEntity)

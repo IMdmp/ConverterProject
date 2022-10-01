@@ -11,8 +11,6 @@ class ConvertCurrencyUseCaseImpl @Inject constructor(): ConvertCurrencyUseCase {
         receiveCurrencyId: String
     ): Double {
         val returnData = sellData + 10
-
-
         return returnData
     }
 

@@ -10,7 +10,7 @@ import com.imdmp.converter.repository.database.entity.WalletEntity
 interface WalletDAO {
 
     @Query("SELECT * FROM UserWallet")
-    fun getAllWalletData(): List<WalletEntity>
+    fun getAllWalletData(): List<WalletEntity>?
 
     @Insert(onConflict = REPLACE)
     fun insertWallet(walletEntity: WalletEntity)
@@ -19,5 +19,5 @@ interface WalletDAO {
     fun insertAllWallet(walletEntity: List<WalletEntity>)
 
     @Query("SELECT * FROM UserWallet WHERE currency = :currencyId ")
-    fun getWallet(currencyId: String): WalletEntity
+    fun getWallet(currencyId: String): WalletEntity?
 }
