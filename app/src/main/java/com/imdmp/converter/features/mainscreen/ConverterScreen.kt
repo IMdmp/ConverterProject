@@ -10,6 +10,8 @@ import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.ScaffoldState
+import androidx.compose.material.Snackbar
+import androidx.compose.material.SnackbarHost
 import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
@@ -17,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -49,7 +52,8 @@ fun ConverterScreen(
                 // Handle events
                 is BaseViewModel.Event.ShowSnackbarString -> {
                     state.snackbarHostState.showSnackbar(
-                        value.message
+                        value.message,
+                        actionLabel = "close"
                     )
                 }
 
@@ -88,6 +92,15 @@ private fun ConverterScreen(
 ) {
     Scaffold(
         scaffoldState = scaffoldState,
+        snackbarHost = {
+            SnackbarHost(it) { data ->
+                Snackbar(
+                    backgroundColor = Color(242, 87, 77),
+                    actionColor = Color.White,
+                    snackbarData = data
+                )
+            }
+        },
         topBar = { }
     ) {
         ConstraintLayout(
