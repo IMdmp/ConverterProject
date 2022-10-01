@@ -32,6 +32,13 @@ fun TransactionSchema.toConvertRecordEntity(): ConvertRecordEntity {
     )
 }
 
+fun ConvertRecordEntity.toTransactionSchema(): TransactionSchema {
+    return TransactionSchema(
+        sellWalletData = this.sellData.convertToWalletSchema(),
+        buyWalletData = this.buyData.convertToWalletSchema()
+    )
+}
+
 @Suppress("UNCHECKED_CAST")
 fun JSONObject.convertToPullLatestRatesSchema(): PullLatestRatesSchema { //used for unit test
     val rateObject: JSONObject = this.get("rates") as JSONObject

@@ -1,5 +1,6 @@
 package com.imdmp.converter.usecase.impl
 
+import com.imdmp.converter.base.di.NameAnnotationConstants
 import com.imdmp.converter.repository.ConverterRepository
 import com.imdmp.converter.schema.ConvertUserWalletCurrencyError
 import com.imdmp.converter.schema.ConvertUserWalletResultSchema
@@ -13,9 +14,11 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
+import javax.inject.Named
 
 class ConvertUserWalletCurrencyUseCaseImpl @Inject constructor(
     private val converterRepository: ConverterRepository,
+    @Named(NameAnnotationConstants.FREE_UP_TO_200_EUR)
     private val getCommissionChargeUseCase: GetCommissionChargeUseCase,
     private val saveTransactionUseCase: SaveTransactionUseCase
 ): ConvertUserWalletCurrencyUseCase {
@@ -41,7 +44,7 @@ class ConvertUserWalletCurrencyUseCaseImpl @Inject constructor(
                 throw ConvertUserWalletCurrencyError.NotEnoughBalance
             }
 
-            val commissionCharge = getCommissionChargeUseCase(sellWalletSchema.currencyValue)
+            val commissionCharge = getCommissionChargeUseCase(sellWalletSchema)
             val newSellValue = userSellBalance.currencyValue -
                 sellWalletSchema.currencyValue -
                 commissionCharge

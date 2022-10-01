@@ -13,4 +13,7 @@ interface ConverterRepository {
     suspend fun getWalletBalance(currencyId: String): WalletSchema?
     suspend fun saveTransaction(transactionSchema: TransactionSchema)
     suspend fun getNumberOfTransactions(): Int
+    suspend fun getTransactionsWithCurrencyLike(walletSchema: WalletSchema): List<TransactionSchema>
+    suspend fun getAllTransactions(walletSchema: WalletSchema): List<TransactionSchema>
+
 }
