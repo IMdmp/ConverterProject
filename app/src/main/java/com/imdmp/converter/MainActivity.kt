@@ -30,6 +30,7 @@ class MainActivity: FragmentActivity() {
 
         setContent {
             ConverterTheme {
+//                NumberScreen()
                 ConverterScreen(converterViewModel, object: ConverterScreenActivityCallbacks {
                     override fun openCurrencyPicker(transactionType: TransactionType) {
                         openBottomSheet(transactionType)

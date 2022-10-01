@@ -1,8 +1,8 @@
 package com.imdmp.converter.features.mainscreen
 
-interface ConverterScreenCallbacks {
-    fun onSellDataUpdated(data: Double)
-    fun onBuyDataUpdated(data: Double)
+import com.imdmp.converter.features.mainscreen.currencydisplay.CurrencyDisplayCallbacks
+
+interface ConverterScreenCallbacks: CurrencyDisplayCallbacks {
 
     companion object {
         fun default(): ConverterScreenCallbacks {
@@ -12,6 +12,10 @@ interface ConverterScreenCallbacks {
                 }
 
                 override fun onBuyDataUpdated(data: Double) {
+                    TODO("Not yet implemented")
+                }
+
+                override fun switchCurrencyLabels() {
                     TODO("Not yet implemented")
                 }
 

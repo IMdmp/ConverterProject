@@ -86,7 +86,7 @@ class ConverterViewModel @Inject constructor(
         when (transactionType) {
             TransactionType.RECEIVE -> {
                 if (currencyModel.abbrev == converterViewState.value?.sellCurrencyLabel) {
-                    switchCurrency()
+                    switchCurrencyLabels()
                 } else {
                     _converterViewState.value =
                         converterViewState.value?.copy(receiveCurrencyLabel = currencyModel.abbrev)
@@ -94,7 +94,7 @@ class ConverterViewModel @Inject constructor(
             }
             TransactionType.SELL -> {
                 if (currencyModel.abbrev == converterViewState.value?.receiveCurrencyLabel) {
-                    switchCurrency()
+                    switchCurrencyLabels()
                 } else {
                     _converterViewState.value =
                         converterViewState.value?.copy(sellCurrencyLabel = currencyModel.abbrev)
@@ -103,15 +103,7 @@ class ConverterViewModel @Inject constructor(
         }
     }
 
-    fun switchCurrency() {
-        converterViewState.value?.also {
-            val temp = it.receiveCurrencyLabel
-            _converterViewState.value = it.copy(
-                receiveCurrencyLabel = it.sellCurrencyLabel,
-                sellCurrencyLabel = temp
-            )
-        }
-    }
+
 
     override fun onSellDataUpdated(data: Double) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -140,6 +132,16 @@ class ConverterViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    override fun switchCurrencyLabels() {
+        converterViewState.value?.also {
+            val temp = it.receiveCurrencyLabel
+            _converterViewState.value = it.copy(
+                receiveCurrencyLabel = it.sellCurrencyLabel,
+                sellCurrencyLabel = temp
+            )
         }
     }
 
