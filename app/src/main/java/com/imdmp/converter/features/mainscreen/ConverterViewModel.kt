@@ -14,6 +14,7 @@ import com.imdmp.converter.usecase.ConvertUserWalletCurrencyUseCase
 import com.imdmp.converter.usecase.GetWalletBalanceUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -32,10 +33,51 @@ class ConverterViewModel @Inject constructor(
 
     var isLoading = MutableLiveData(false)
 
+    var selectedInputBox = SelectedInputBox.NONE
+    var characterInput = MutableSharedFlow<Char>()
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
             updateWalletBalance()
+
+            characterInput.collect {
+                val value = converterViewState.value!!
+
+                when (selectedInputBox) {
+                    SelectedInputBox.RECEIVE -> {
+                        val result = sanitizeData(value.receiveCurrencyData, it)
+                        _converterViewState.postValue(
+                            value.copy(
+                                receiveCurrencyData = result
+                            )
+                        )
+                        onBuyDataUpdated(result.toDouble())
+                    }
+
+                    SelectedInputBox.SELL -> {
+                        val result = sanitizeData(value.sellCurrencyData, it)
+                        _converterViewState.postValue(
+                            value.copy(
+                                sellCurrencyData = result
+                            )
+                        )
+
+                        onSellDataUpdated(result.toDouble())
+                    }
+                    else -> {}
+                }
+            }
         }
+    }
+
+    private fun sanitizeData(existingStringData: String, char: Char): String {
+        if (char == '.' && existingStringData.contains('.')) {
+            return existingStringData
+        } else if (char == 'X' && existingStringData.isNotEmpty()) {
+            return existingStringData.dropLast(1)
+        }
+
+        return existingStringData.plus(char)
     }
 
     fun convertCurrency() {
@@ -43,11 +85,11 @@ class ConverterViewModel @Inject constructor(
             val value = converterViewState.value!!
             val sellWalletSchema = WalletSchema(
                 currencyAbbrev = value.sellCurrencyLabel,
-                currencyValue = value.sellCurrencyData
+                currencyValue = value.sellCurrencyData.toDouble()
             )
             val buyWalletSchema = WalletSchema(
                 currencyAbbrev = value.receiveCurrencyLabel,
-                currencyValue = value.receiveCurrencyData
+                currencyValue = value.receiveCurrencyData.toDouble()
             )
 
             convertUserWalletCurrencyUseCase(
@@ -104,7 +146,6 @@ class ConverterViewModel @Inject constructor(
     }
 
 
-
     override fun onSellDataUpdated(data: Double) {
         viewModelScope.launch(Dispatchers.IO) {
             converterViewState.value?.let {
@@ -112,8 +153,8 @@ class ConverterViewModel @Inject constructor(
                     convertCurrencyUseCase(data, it.sellCurrencyLabel, it.receiveCurrencyLabel)
                 withContext(Dispatchers.Main) {
                     _converterViewState.value = converterViewState.value?.copy(
-                        receiveCurrencyData = resultData,
-                        sellCurrencyData = data
+                        receiveCurrencyData = resultData.toString(),
+                        sellCurrencyData = data.toString()
                     )
                 }
             }
@@ -127,8 +168,8 @@ class ConverterViewModel @Inject constructor(
                     convertCurrencyUseCase(data, it.sellCurrencyLabel, it.receiveCurrencyLabel)
                 withContext(Dispatchers.Main) {
                     _converterViewState.value = converterViewState.value?.copy(
-                        sellCurrencyData = resultData,
-                        receiveCurrencyData = data,
+                        sellCurrencyData = resultData.toString(),
+                        receiveCurrencyData = data.toString(),
                     )
                 }
             }
@@ -142,6 +183,30 @@ class ConverterViewModel @Inject constructor(
                 receiveCurrencyLabel = it.sellCurrencyLabel,
                 sellCurrencyLabel = temp
             )
+        }
+    }
+
+    override fun inputBoxSelected(selectedInputBox: SelectedInputBox) {
+        this.selectedInputBox = selectedInputBox
+
+        when (selectedInputBox) {
+            SelectedInputBox.NONE -> TODO()
+            SelectedInputBox.SELL -> {
+                _converterViewState.postValue(
+                    converterViewState.value?.copy(sellCurrencyData = "")
+                )
+            }
+            SelectedInputBox.RECEIVE -> {
+                _converterViewState.postValue(
+                    converterViewState.value?.copy(receiveCurrencyData = "")
+                )
+            }
+        }
+    }
+
+    override fun characterEmitted(c: Char) {
+        viewModelScope.launch(Dispatchers.IO) {
+            characterInput.emit(c)
         }
     }
 

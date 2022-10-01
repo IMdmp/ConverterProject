@@ -3,9 +3,9 @@ package com.imdmp.converter.features.mainscreen
 data class ConverterViewState(
     val converterDataLoading: Boolean = false,
     val sellCurrencyLabel: String,
-    val sellCurrencyData: Double,
+    val sellCurrencyData: String,
     val receiveCurrencyLabel: String,
-    val receiveCurrencyData: Double,
+    val receiveCurrencyData: String,
     val errorPresent: Boolean = false,
     val errorMessage: String? = null,
 ) {
@@ -14,9 +14,9 @@ data class ConverterViewState(
             return ConverterViewState(
                 converterDataLoading = false,
                 sellCurrencyLabel = "EUR",
-                sellCurrencyData = 0.0,
+                sellCurrencyData = "",
                 receiveCurrencyLabel = "USD",
-                receiveCurrencyData = 0.0,
+                receiveCurrencyData = "",
                 errorPresent = false,
                 errorMessage = null,
             )

@@ -16,44 +16,44 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
+interface NumberScreenCallbacks {
+    fun characterEmitted(c: Char)
+}
+
 @Composable
-fun NumberScreen(modifier: Modifier = Modifier) {
+fun NumberScreen(modifier: Modifier = Modifier, numberScreenCallbacks: NumberScreenCallbacks) {
     Column(modifier = modifier.fillMaxSize()) {
-        NumberRow(listOf("1", "2", "3"))
-        NumberRow(listOf("4", "5", "6"))
-        NumberRow(listOf("7", "8", "9"))
-        NumberRow(listOf(".", "0", "X"))
+        NumberRow(listOf("1", "2", "3")) { s -> numberScreenCallbacks.characterEmitted(s.first()) }
+        NumberRow(listOf("4", "5", "6")) { s -> numberScreenCallbacks.characterEmitted(s.first()) }
+        NumberRow(listOf("7", "8", "9")) { s -> numberScreenCallbacks.characterEmitted(s.first()) }
+        NumberRow(listOf(".", "0", "X")) { s -> numberScreenCallbacks.characterEmitted(s.first()) }
     }
 }
 
 @Composable
-fun NumberRow(numberItems: List<String>) {
+fun NumberRow(numberItems: List<String>, itemEmit: (s: String) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceAround
     ) {
-        NumberItem(
-            modifier = Modifier
-
-                .weight(1f), number = numberItems[0]
-        )
-        NumberItem(
-            modifier = Modifier
-                .weight(1f), number = numberItems[1]
-        )
-        NumberItem(
-            modifier = Modifier
-                .weight(1f), number = numberItems[2]
-        )
+        numberItems.forEach {
+            NumberItem(
+                modifier = Modifier
+                    .weight(1f),
+                number = it,
+                itemEmit = itemEmit,
+            )
+        }
     }
 }
 
 @Composable
-fun NumberItem(modifier: Modifier = Modifier, number: String) {
+fun NumberItem(modifier: Modifier = Modifier, number: String, itemEmit: (s: String) -> Unit) {
     Text(
         modifier = modifier
             .clickable {
+                itemEmit(number)
             }
             .padding(top = 8.dp, bottom = 8.dp),
         text = number,
@@ -65,5 +65,10 @@ fun NumberItem(modifier: Modifier = Modifier, number: String) {
 @Preview
 @Composable
 fun PreviewNumberScreen() {
-    NumberScreen()
+    NumberScreen(numberScreenCallbacks = object: NumberScreenCallbacks {
+        override fun characterEmitted(c: Char) {
+            TODO("Not yet implemented")
+        }
+
+    })
 }
