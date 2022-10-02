@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,18 +15,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.imdmp.converter.features.ui.theme.PurpleCustom
+import com.imdmp.converter.features.ui.theme.Typography
 
 interface NumberScreenCallbacks {
     fun characterEmitted(c: Char)
 }
 
+const val CANCEL_CHAR = 'x'
+
 @Composable
 fun NumberScreen(modifier: Modifier = Modifier, numberScreenCallbacks: NumberScreenCallbacks) {
-    Column(modifier = modifier.fillMaxSize()) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(top = 16.dp)
+    ) {
         NumberRow(listOf("1", "2", "3")) { s -> numberScreenCallbacks.characterEmitted(s.first()) }
         NumberRow(listOf("4", "5", "6")) { s -> numberScreenCallbacks.characterEmitted(s.first()) }
         NumberRow(listOf("7", "8", "9")) { s -> numberScreenCallbacks.characterEmitted(s.first()) }
-        NumberRow(listOf(".", "0", "X")) { s -> numberScreenCallbacks.characterEmitted(s.first()) }
+        NumberRow(
+            listOf(
+                ".",
+                "0",
+                CANCEL_CHAR.toString()
+            )
+        ) { s -> numberScreenCallbacks.characterEmitted(s.first()) }
     }
 }
 
@@ -55,20 +69,23 @@ fun NumberItem(modifier: Modifier = Modifier, number: String, itemEmit: (s: Stri
             .clickable {
                 itemEmit(number)
             }
-            .padding(top = 8.dp, bottom = 8.dp),
+            .padding(top = 16.dp, bottom = 16.dp),
         text = number,
         textAlign = TextAlign.Center,
-        style = MaterialTheme.typography.h4
+        style = Typography.h3
     )
 }
 
 @Preview
 @Composable
 fun PreviewNumberScreen() {
-    NumberScreen(numberScreenCallbacks = object: NumberScreenCallbacks {
-        override fun characterEmitted(c: Char) {
-            TODO("Not yet implemented")
-        }
+    Surface(color = PurpleCustom) {
 
-    })
+        NumberScreen(numberScreenCallbacks = object: NumberScreenCallbacks {
+            override fun characterEmitted(c: Char) {
+                TODO("Not yet implemented")
+            }
+
+        })
+    }
 }

@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.imdmp.converter.base.BaseViewModel
 import com.imdmp.converter.features.mainscreen.currencypicker.CurrencyModel
+import com.imdmp.converter.features.mainscreen.numberscreen.CANCEL_CHAR
 import com.imdmp.converter.schema.ConvertUserWalletResultSchema
 import com.imdmp.converter.schema.WalletSchema
 import com.imdmp.converter.usecase.ConvertCurrencyUseCase
@@ -73,7 +74,7 @@ class ConverterViewModel @Inject constructor(
     private fun sanitizeData(existingStringData: String, char: Char): String {
         if (char == '.' && existingStringData.contains('.')) {
             return existingStringData
-        } else if (char == 'X' && existingStringData.isNotEmpty()) {
+        } else if (char == CANCEL_CHAR && existingStringData.isNotEmpty()) {
             return existingStringData.dropLast(1)
         }
 

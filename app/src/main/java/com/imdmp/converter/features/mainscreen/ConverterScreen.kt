@@ -1,7 +1,9 @@
 package com.imdmp.converter.features.mainscreen
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,6 +14,7 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.Snackbar
 import androidx.compose.material.SnackbarHost
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
@@ -28,6 +31,8 @@ import com.imdmp.converter.base.BaseViewModel
 import com.imdmp.converter.features.mainscreen.currencydisplay.CurrencyDisplayComposeModel
 import com.imdmp.converter.features.mainscreen.currencydisplay.CurrencyDisplayScreen
 import com.imdmp.converter.features.mainscreen.numberscreen.NumberScreen
+import com.imdmp.converter.features.ui.theme.PurpleCustom
+import com.imdmp.converter.features.ui.theme.Typography
 import com.imdmp.converter.schema.WalletSchema
 import kotlinx.coroutines.flow.collectLatest
 
@@ -115,7 +120,6 @@ private fun ConverterScreen(
         ) {
             val (
                 balanceRow,
-                currencyLabel,
                 currencyDisplay,
                 submitButton,
                 numberScreen,
@@ -130,18 +134,11 @@ private fun ConverterScreen(
                 walletList = walletList
             )
 
-            Text(
-                modifier = Modifier.constrainAs(currencyLabel) {
-                    top.linkTo(balanceRow.bottom, 16.dp)
-                    start.linkTo(parent.start)
-                }, text = "Currency Exchange"
-            )
-
             CurrencyDisplayScreen(
                 modifier = Modifier.constrainAs(
                     currencyDisplay
                 ) {
-                    top.linkTo(currencyLabel.bottom, 16.dp)
+                    top.linkTo(balanceRow.bottom, 16.dp)
                 },
                 model = CurrencyDisplayComposeModel(
                     sellCurrencyLabel = viewState.sellCurrencyLabel,
@@ -161,7 +158,6 @@ private fun ConverterScreen(
                 },
                 numberScreenCallbacks = converterScreenCallbacks
             )
-
             Button(
                 modifier = Modifier
                     .padding(top = 16.dp)
@@ -191,34 +187,40 @@ private fun ConverterScreen(
 fun BalanceRow(modifier: Modifier, walletList: List<WalletSchema>) {
     val state = rememberScrollState()
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(modifier = Modifier.align(Alignment.Start), text = "My Balances")
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(top = 16.dp)
-//                .horizontalScroll(state)
-//        ) {
-//            walletList.forEach {
-//                Text(
-//                    modifier = Modifier.padding(end = 16.dp),
-//                    text = "${it.currencyValue} ${it.currencyAbbrev}"
-//                )
-//            }
-//        }
+        Text(
+            modifier = Modifier.align(Alignment.Start),
+            text = "My Balances",
+            style = Typography.h4
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
+                .horizontalScroll(state)
+        ) {
+            walletList.forEach {
+                Text(
+                    modifier = Modifier.padding(end = 16.dp),
+                    text = "${it.currencyValue} ${it.currencyAbbrev}",
+                    style = Typography.h5
+                )
+            }
+        }
     }
 }
-
-
 
 
 @Preview
 @Composable
 fun PreviewConverterScreen() {
-    ConverterScreen(
-        isLoading = false,
-        viewState = ConverterViewState.init(),
-        listOf(),
-        ConverterScreenCallbacks.default(),
-        rememberScaffoldState(),
-        {}) {}
+    Surface(color = PurpleCustom) {
+
+        ConverterScreen(
+            isLoading = false,
+            viewState = ConverterViewState.init(),
+            listOf(),
+            ConverterScreenCallbacks.default(),
+            rememberScaffoldState(),
+            {}) {}
+    }
 }
