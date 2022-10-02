@@ -6,6 +6,11 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.background
+import androidx.compose.material.Surface
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.FragmentActivity
 import com.imdmp.converter.features.mainscreen.ConverterScreen
 import com.imdmp.converter.features.mainscreen.ConverterScreenActivityCallbacks
@@ -15,6 +20,7 @@ import com.imdmp.converter.features.mainscreen.currencypicker.CurrencyModel
 import com.imdmp.converter.features.mainscreen.currencypicker.CurrencyPickerBottomDialogFragment
 import com.imdmp.converter.features.mainscreen.currencypicker.CurrencyPickerListener
 import com.imdmp.converter.features.ui.theme.ConverterTheme
+import com.imdmp.converter.features.ui.theme.PurpleCustom
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -30,19 +36,32 @@ class MainActivity: FragmentActivity() {
 
         setContent {
             ConverterTheme {
-                ConverterScreen(converterViewModel, object: ConverterScreenActivityCallbacks {
-                    override fun openCurrencyPicker(transactionType: TransactionType) {
-                        openBottomSheet(transactionType)
-                    }
+                Surface(
+                    Modifier.background(
+                        brush = Brush.verticalGradient(
+                            startY = Float.POSITIVE_INFINITY,
+                            endY = 0.0f,
+                            colors = listOf(
+                                Color.Black,
+                                PurpleCustom,
+                            )
+                        )
+                    )
+                ) {
+                    ConverterScreen(converterViewModel, object: ConverterScreenActivityCallbacks {
+                        override fun openCurrencyPicker(transactionType: TransactionType) {
+                            openBottomSheet(transactionType)
+                        }
 
-                    override fun hideKeyboard() {
-                        val view: View = this@MainActivity.findViewById(android.R.id.content)
+                        override fun hideKeyboard() {
+                            val view: View = this@MainActivity.findViewById(android.R.id.content)
 
-                        val imm: InputMethodManager =
-                            this@MainActivity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                        imm.hideSoftInputFromWindow(view.windowToken, 0)
-                    }
-                })
+                            val imm: InputMethodManager =
+                                this@MainActivity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                            imm.hideSoftInputFromWindow(view.windowToken, 0)
+                        }
+                    })
+                }
             }
         }
     }

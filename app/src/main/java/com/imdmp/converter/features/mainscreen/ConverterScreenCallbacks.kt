@@ -1,12 +1,17 @@
 package com.imdmp.converter.features.mainscreen
 
-interface ConverterScreenCallbacks {
-    fun onSellDataUpdated(data: Double)
-    fun onBuyDataUpdated(data: Double)
+import com.imdmp.converter.features.mainscreen.currencydisplay.CurrencyDisplayCallbacks
+import com.imdmp.converter.features.mainscreen.numberscreen.NumberScreenCallbacks
 
+interface ConverterScreenCallbacks: CurrencyDisplayCallbacks, NumberScreenCallbacks {
+    fun convertAgainSelected()
     companion object {
         fun default(): ConverterScreenCallbacks {
             return object: ConverterScreenCallbacks {
+                override fun convertAgainSelected() {
+                    TODO("Not yet implemented")
+                }
+
                 override fun onSellDataUpdated(data: Double) {
                     TODO("Not yet implemented")
                 }
@@ -14,6 +19,19 @@ interface ConverterScreenCallbacks {
                 override fun onBuyDataUpdated(data: Double) {
                     TODO("Not yet implemented")
                 }
+
+                override fun switchCurrencyLabels() {
+                    TODO("Not yet implemented")
+                }
+
+                override fun inputBoxSelected(selectedInputBox: SelectedInputBox) {
+                    TODO("Not yet implemented")
+                }
+
+                override fun characterEmitted(c: Char) {
+                    TODO("Not yet implemented")
+                }
+
 
             }
         }
