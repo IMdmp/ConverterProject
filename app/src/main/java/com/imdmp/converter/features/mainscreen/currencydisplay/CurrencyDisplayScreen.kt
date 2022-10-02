@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Surface
@@ -49,8 +50,6 @@ import com.imdmp.converter.features.ui.theme.PurpleCustom
 import com.imdmp.converter.features.ui.theme.Typography
 
 interface CurrencyDisplayCallbacks {
-    fun onSellDataUpdated(data: Double)
-    fun onBuyDataUpdated(data: Double)
     fun switchCurrencyLabels()
     fun inputBoxSelected(selectedInputBox: SelectedInputBox)
 }
@@ -60,6 +59,7 @@ data class CurrencyDisplayComposeModel(
     val sellCurrencyData: String,
     val receiveCurrencyLabel: String,
     val receiveCurrencyData: String,
+    val retrievingRate: Boolean,
 )
 
 
@@ -85,6 +85,7 @@ fun CurrencyDisplayScreen(
             currency = model.sellCurrencyLabel,
             data = model.sellCurrencyData,
             type = "Sell",
+            rateLoading = model.retrievingRate,
             inputBoxSelected = {
                 currencyDisplayCallbacks.inputBoxSelected(SelectedInputBox.SELL)
             },
@@ -125,6 +126,7 @@ fun CurrencyDisplayScreen(
             currency = model.receiveCurrencyLabel,
             data = model.receiveCurrencyData,
             type = "Buy",
+            rateLoading = model.retrievingRate,
             inputBoxSelected = {
                 currencyDisplayCallbacks.inputBoxSelected(selectedInputBox = SelectedInputBox.RECEIVE)
             },
@@ -144,6 +146,7 @@ fun ConvertRow(
     type: String,
     data: String,
     currency: String,
+    rateLoading: Boolean,
     inputBoxSelected: () -> Unit,
     onValueUpdate: (s: String) -> Unit,
     onCurrencyClicked: () -> Unit
@@ -162,6 +165,7 @@ fun ConvertRow(
         ConvertRowDataExchange(
             Modifier.weight(0.7f),
             data = data,
+            rateLoading = rateLoading,
             inputBoxSelected = inputBoxSelected,
             onValueUpdate = onValueUpdate,
         )
@@ -173,6 +177,7 @@ fun ConvertRowDataExchange(
     modifier: Modifier = Modifier,
     data: String,
     inputBoxSelected: () -> Unit,
+    rateLoading: Boolean,
     onValueUpdate: (s: String) -> Unit = {},
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -185,9 +190,9 @@ fun ConvertRowDataExchange(
     val tfv =
         TextFieldValue(text = data, selection = TextRange(data.length))
 
-    Row(
+    Column(
         modifier = modifier.padding(start = 16.dp, end = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalArrangement = Arrangement.SpaceAround
     ) {
         CompositionLocalProvider(
             LocalTextInputService provides null
@@ -205,6 +210,14 @@ fun ConvertRowDataExchange(
                 })
         }
 
+        if (rateLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(12.dp)
+                    .align(Alignment.End),
+                color = Color.White
+            )
+        }
 
     }
 }
@@ -274,17 +287,11 @@ fun PreviewCurrencyDisplayScreen() {
                 sellCurrencyLabel = "USD",
                 sellCurrencyData = "",
                 receiveCurrencyLabel = "EUR",
-                receiveCurrencyData = ""
+                receiveCurrencyData = "",
+                retrievingRate = true,
             ),
             currencyDisplayCallbacks = object:
                 CurrencyDisplayCallbacks {
-                override fun onSellDataUpdated(data: Double) {
-                    TODO("Not yet implemented")
-                }
-
-                override fun onBuyDataUpdated(data: Double) {
-                    TODO("Not yet implemented")
-                }
 
                 override fun switchCurrencyLabels() {
                     TODO("Not yet implemented")

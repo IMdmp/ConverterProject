@@ -151,9 +151,10 @@ private fun ConverterScreen(
                 },
                 model = CurrencyDisplayComposeModel(
                     sellCurrencyLabel = viewState.sellCurrencyLabel,
-                    sellCurrencyData = viewState.sellCurrencyData.toString(),
+                    sellCurrencyData = viewState.sellCurrencyData,
                     receiveCurrencyLabel = viewState.receiveCurrencyLabel,
-                    receiveCurrencyData = viewState.receiveCurrencyData.toString()
+                    receiveCurrencyData = viewState.receiveCurrencyData,
+                    retrievingRate = viewState.retrievingRate,
                 ),
                 currencyDisplayCallbacks = converterScreenCallbacks,
                 currencySelected = currencySelected

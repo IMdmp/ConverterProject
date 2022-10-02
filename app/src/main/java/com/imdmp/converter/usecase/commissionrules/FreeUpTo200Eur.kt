@@ -26,7 +26,6 @@ class FreeUpTo200Eur @Inject constructor(
                 EUR
             )
 
-            totalConvertedSoFar += converted
         }
 
         return if (totalConvertedSoFar <= 200) {
