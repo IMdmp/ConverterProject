@@ -9,6 +9,7 @@ import com.imdmp.converter.schema.WalletSchema
 import com.imdmp.converter.usecase.ConvertUserWalletCurrencyUseCase
 import com.imdmp.converter.usecase.GetCommissionChargeUseCase
 import com.imdmp.converter.usecase.SaveTransactionUseCase
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
@@ -40,6 +41,7 @@ class ConvertUserWalletCurrencyUseCaseImpl @Inject constructor(
                         0.0
                     )
 
+            delay(2000)
             if (userSellBalance.currencyValue < sellWalletSchema.currencyValue) {
                 throw ConvertUserWalletCurrencyError.NotEnoughBalance
             }

@@ -19,7 +19,8 @@ val Typography = Typography(
     body1 = TextStyle(
         fontFamily = fonts,
         fontWeight = FontWeight.Normal,
-        fontSize = 12.sp
+        fontSize = 16.sp,
+        color = Color.White
     ),
     h3 = TextStyle(
         fontFamily = fonts,
@@ -43,7 +44,7 @@ val Typography = Typography(
         fontFamily = fonts,
         fontSize = 12.sp,
         color = Color.LightGray
-    )
+    ),
     /* Other default text styles to override
     button = TextStyle(
         fontFamily = FontFamily.Default,

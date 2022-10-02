@@ -1,6 +1,8 @@
 package com.imdmp.converter.features.mainscreen
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Scaffold
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.Snackbar
@@ -23,6 +25,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -49,7 +52,8 @@ fun ConverterScreen(
         converterViewModel.converterViewState.observeAsState(ConverterViewState.init()).value
     val walletListState = converterViewModel.walletBalance.observeAsState().value
     val state = rememberScaffoldState()
-    val isLoading = converterViewModel.isLoading.observeAsState().value ?: false
+    val isLoading = viewState.converterDataLoading
+    val submitButtonEnabled = converterViewModel.submitButtonEnabled.value
 
     LaunchedEffect(key1 = Unit) {
         converterViewModel.eventsFlow.collectLatest { value ->
@@ -57,14 +61,14 @@ fun ConverterScreen(
                 // Handle events
                 is BaseViewModel.Event.ShowSnackbarString -> {
                     state.snackbarHostState.showSnackbar(
-                        value.message,
+                        value.message + "success",
                         actionLabel = "close"
                     )
                 }
 
                 is BaseViewModel.Event.ShowError -> {
                     state.snackbarHostState.showSnackbar(
-                        "ERROR!"
+                        "ERROR!" + "error"
                     )
                 }
             }
@@ -76,7 +80,9 @@ fun ConverterScreen(
         viewState = viewState,
         walletList = walletListState?.toList() ?: listOf(),
         converterScreenCallbacks = converterViewModel,
+        submitButtonEnabled = submitButtonEnabled,
         scaffoldState = state,
+        showBalanceConvertSuccess = converterViewModel.showBalanceConvertSuccess.value,
         convertData = {
             converterViewModel.convertCurrency()
             converterScreenActivityCallbacks.hideKeyboard()
@@ -91,7 +97,9 @@ private fun ConverterScreen(
     viewState: ConverterViewState,
     walletList: List<WalletSchema>,
     converterScreenCallbacks: ConverterScreenCallbacks,
+    submitButtonEnabled: Boolean = false,
     scaffoldState: ScaffoldState,
+    showBalanceConvertSuccess: Pair<Boolean, String>,
     convertData: () -> Unit,
     currencySelected: (t: TransactionType) -> Unit
 ) {
@@ -123,6 +131,8 @@ private fun ConverterScreen(
                 currencyDisplay,
                 submitButton,
                 numberScreen,
+                loadingBox,
+                successMessage,
             ) = createRefs()
 
             BalanceRow(
@@ -149,15 +159,42 @@ private fun ConverterScreen(
                 currencyDisplayCallbacks = converterScreenCallbacks,
                 currencySelected = currencySelected
             )
+            if (showBalanceConvertSuccess.first) {
+                SuccessBox(Modifier.constrainAs(successMessage) {
+                    top.linkTo(currencyDisplay.bottom)
+                    bottom.linkTo(submitButton.top)
+                    height = Dimension.fillToConstraints
+                }, showBalanceConvertSuccess) {
+                    converterScreenCallbacks.convertAgainSelected()
+                }
+            }
 
-            NumberScreen(
-                modifier = Modifier.constrainAs(numberScreen) {
+            if (isLoading.not() && showBalanceConvertSuccess.first.not()) {
+                NumberScreen(
+                    modifier = Modifier.constrainAs(numberScreen) {
+                        top.linkTo(currencyDisplay.bottom)
+                        bottom.linkTo(submitButton.top)
+                        height = Dimension.fillToConstraints
+                    },
+                    numberScreenCallbacks = converterScreenCallbacks
+                )
+            }
+
+            AnimatedVisibility(
+                modifier = Modifier.constrainAs(loadingBox) {
                     top.linkTo(currencyDisplay.bottom)
                     bottom.linkTo(submitButton.top)
                     height = Dimension.fillToConstraints
                 },
-                numberScreenCallbacks = converterScreenCallbacks
-            )
+                visible = isLoading
+            ) {
+                Box(Modifier.fillMaxSize()) {
+                    CircularProgressIndicator(
+                        modifier =
+                        Modifier.align(Alignment.Center), color = Color.White
+                    )
+                }
+            }
             Button(
                 modifier = Modifier
                     .padding(top = 16.dp)
@@ -167,6 +204,7 @@ private fun ConverterScreen(
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
                     },
+                enabled = submitButtonEnabled,
                 onClick = {
                     convertData()
                 }) {
@@ -175,10 +213,19 @@ private fun ConverterScreen(
 
         }
     }
+}
 
-    if (isLoading) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(style = MaterialTheme.typography.h1, text = "currently loading.")
+@Composable
+fun SuccessBox(modifier: Modifier, pairData: Pair<Boolean, String>, onClick: () -> Unit) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.Center) {
+        Text(
+            pairData.second,
+            style = Typography.h4.copy(color = Color.Green),
+            textAlign = TextAlign.Center
+        )
+
+        Button(onClick = onClick) {
+            Text("Convert Again")
         }
     }
 }
@@ -220,7 +267,9 @@ fun PreviewConverterScreen() {
             viewState = ConverterViewState.init(),
             listOf(),
             ConverterScreenCallbacks.default(),
+            true,
             rememberScaffoldState(),
+            Pair(false, ""),
             {}) {}
     }
 }

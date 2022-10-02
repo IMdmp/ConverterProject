@@ -1,5 +1,6 @@
 package com.imdmp.converter.features.mainscreen
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.LiveData
@@ -15,6 +16,7 @@ import com.imdmp.converter.usecase.ConvertUserWalletCurrencyUseCase
 import com.imdmp.converter.usecase.GetWalletBalanceUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,10 +34,11 @@ class ConverterViewModel @Inject constructor(
     private val _walletBalance = MutableLiveData<SnapshotStateList<WalletSchema>>()
     val walletBalance: LiveData<SnapshotStateList<WalletSchema>> get() = _walletBalance
 
-    var isLoading = MutableLiveData(false)
-
     var selectedInputBox = SelectedInputBox.NONE
-    var characterInput = MutableSharedFlow<Char>()
+    var submitButtonEnabled = mutableStateOf(false)
+
+    private var characterInput = MutableSharedFlow<Char>()
+    var showBalanceConvertSuccess = mutableStateOf(Pair(false, ""))
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -53,6 +56,7 @@ class ConverterViewModel @Inject constructor(
                             )
                         )
                         onBuyDataUpdated(result.toDouble())
+                        submitButtonEnabled.value = true
                     }
 
                     SelectedInputBox.SELL -> {
@@ -64,11 +68,16 @@ class ConverterViewModel @Inject constructor(
                         )
 
                         onSellDataUpdated(result.toDouble())
+                        submitButtonEnabled.value = true
                     }
                     else -> {}
                 }
             }
         }
+    }
+
+    private fun inputFieldsHasData(): Boolean {
+        return (converterViewState.value?.receiveCurrencyData?.isNotBlank() == true || converterViewState.value?.sellCurrencyData?.isNotBlank() == true)
     }
 
     private fun sanitizeData(existingStringData: String, char: Char): String {
@@ -99,25 +108,48 @@ class ConverterViewModel @Inject constructor(
             ).collect { result ->
                 when (result) {
                     is ConvertUserWalletResultSchema.Error -> {
-                        isLoading.postValue(false)
+                        _converterViewState.postValue(
+                            converterViewState.value?.copy(
+                                converterDataLoading = false,
+                            )
+                        )
                         sendEvent(Event.ShowError)
                     }
                     is ConvertUserWalletResultSchema.Loading -> {
-                        isLoading.postValue(true)
-                    }
-                    is ConvertUserWalletResultSchema.Success -> {
-                        isLoading.postValue(false)
-                        updateWalletBalance()
-                        sendEvent(
-                            Event.ShowSnackbarString(
-                                "You have converted ${result.sellData.currencyValue} ${result.sellData.currencyAbbrev} " +
-                                    "to ${result.buyData.currencyValue} ${result.buyData.currencyAbbrev}. Commission Fee - ${result.commissionCharged} ${result.sellData.currencyAbbrev}."
+                        _converterViewState.postValue(
+                            converterViewState.value?.copy(
+                                converterDataLoading = true,
                             )
                         )
+                        submitButtonEnabled.value = false
+                    }
+                    is ConvertUserWalletResultSchema.Success -> {
+                        _converterViewState.postValue(
+                            converterViewState.value?.copy(
+                                converterDataLoading = false,
+                            )
+                        )
+                        updateWalletBalance()
+                        emptyFields()
+                        showBalanceConvertSuccess.value = Pair(
+                            true,
+                            "You have converted ${result.sellData.currencyValue} ${result.sellData.currencyAbbrev} " +
+                                "to ${result.buyData.currencyValue} ${result.buyData.currencyAbbrev}. Commission Fee - ${result.commissionCharged} ${result.sellData.currencyAbbrev}."
+                        )
+                        delay(3000)
+                        showBalanceConvertSuccess.value = Pair(false, "")
                     }
                 }
             }
         }
+    }
+
+    private fun emptyFields() {
+        _converterViewState.postValue(
+            converterViewState.value?.copy(receiveCurrencyData = "", sellCurrencyData = "")
+        )
+        submitButtonEnabled.value = false
+
     }
 
     private suspend fun updateWalletBalance() {
@@ -144,6 +176,10 @@ class ConverterViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    override fun convertAgainSelected() {
+        showBalanceConvertSuccess.value = Pair(false, "")
     }
 
 
@@ -191,16 +227,12 @@ class ConverterViewModel @Inject constructor(
         this.selectedInputBox = selectedInputBox
 
         when (selectedInputBox) {
-            SelectedInputBox.NONE -> TODO()
+            SelectedInputBox.NONE -> {}
             SelectedInputBox.SELL -> {
-                _converterViewState.postValue(
-                    converterViewState.value?.copy(sellCurrencyData = "")
-                )
+                emptyFields()
             }
             SelectedInputBox.RECEIVE -> {
-                _converterViewState.postValue(
-                    converterViewState.value?.copy(receiveCurrencyData = "")
-                )
+                emptyFields()
             }
         }
     }

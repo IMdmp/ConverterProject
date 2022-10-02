@@ -13,13 +13,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.UnfoldMore
@@ -32,6 +31,7 @@ import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalTextInputService
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
@@ -183,11 +183,12 @@ fun ConvertRowDataExchange(
         CompositionLocalProvider(
             LocalTextInputService provides null
         ) {
-            TextField(
+            BasicTextField(
                 modifier = Modifier.fillMaxWidth(),
                 interactionSource = interactionSource,
                 value = tfv,
-                textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.End),
+                cursorBrush = SolidColor(Color.White),
+                textStyle = Typography.body1.copy(textAlign = TextAlign.End),
                 keyboardOptions =
                 KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal),
                 onValueChange = { s: TextFieldValue ->

@@ -4,10 +4,14 @@ import com.imdmp.converter.features.mainscreen.currencydisplay.CurrencyDisplayCa
 import com.imdmp.converter.features.mainscreen.numberscreen.NumberScreenCallbacks
 
 interface ConverterScreenCallbacks: CurrencyDisplayCallbacks, NumberScreenCallbacks {
-
+    fun convertAgainSelected()
     companion object {
         fun default(): ConverterScreenCallbacks {
             return object: ConverterScreenCallbacks {
+                override fun convertAgainSelected() {
+                    TODO("Not yet implemented")
+                }
+
                 override fun onSellDataUpdated(data: Double) {
                     TODO("Not yet implemented")
                 }
@@ -27,6 +31,7 @@ interface ConverterScreenCallbacks: CurrencyDisplayCallbacks, NumberScreenCallba
                 override fun characterEmitted(c: Char) {
                     TODO("Not yet implemented")
                 }
+
 
             }
         }
