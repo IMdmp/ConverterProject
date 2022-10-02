@@ -216,9 +216,11 @@ class ConverterViewModel @Inject constructor(
     override fun switchCurrencyLabels() {
         converterViewState.value?.also {
             val temp = it.receiveCurrencyLabel
-            _converterViewState.value = it.copy(
-                receiveCurrencyLabel = it.sellCurrencyLabel,
-                sellCurrencyLabel = temp
+            _converterViewState.postValue(
+                it.copy(
+                    receiveCurrencyLabel = it.sellCurrencyLabel,
+                    sellCurrencyLabel = temp
+                )
             )
         }
     }

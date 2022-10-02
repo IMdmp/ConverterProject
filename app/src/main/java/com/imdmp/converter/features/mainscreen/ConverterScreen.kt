@@ -52,7 +52,6 @@ fun ConverterScreen(
         converterViewModel.converterViewState.observeAsState(ConverterViewState.init()).value
     val walletListState = converterViewModel.walletBalance.observeAsState().value
     val state = rememberScaffoldState()
-    val isLoading = viewState.converterDataLoading
     val submitButtonEnabled = converterViewModel.submitButtonEnabled.value
 
     LaunchedEffect(key1 = Unit) {
@@ -76,7 +75,7 @@ fun ConverterScreen(
     }
 
     ConverterScreen(
-        isLoading = isLoading,
+        isLoading = viewState.converterDataLoading,
         viewState = viewState,
         walletList = walletListState?.toList() ?: listOf(),
         converterScreenCallbacks = converterViewModel,
