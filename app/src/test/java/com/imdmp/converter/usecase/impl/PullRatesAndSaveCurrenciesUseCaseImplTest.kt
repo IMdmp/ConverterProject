@@ -26,7 +26,7 @@ class PullRatesAndSaveCurrenciesUseCaseImplTest {
     }
 
     @Test
-    fun `invoke calls pullLatestRates and currencyIdList`() = runTest {
+    fun `invoke calls pullLatestRates and saveSupportedCurrencyList`() = runTest {
         whenever(mockedConverterRepository.pullLatestRates()).thenReturn(
             PullLatestRatesSchema(
                 base = "",
@@ -35,14 +35,9 @@ class PullRatesAndSaveCurrenciesUseCaseImplTest {
                 timestamp = 0
             )
         )
-
-        whenever(mockedConverterRepository.saveCurrencyIdList(listOf())).thenReturn(Unit)
-
         useCase()
 
         verify(mockedConverterRepository).pullLatestRates()
-        verify(mockedConverterRepository).saveCurrencyIdList(listOf())
     }
 
-    // todo: add error tests
 }

@@ -12,6 +12,7 @@ import com.imdmp.converter.usecase.GetAvailableCurrenciesUseCase
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -44,9 +45,12 @@ class CurrencyPickerBottomDialogFragment: BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         lifecycleScope.launch(Dispatchers.IO) {
-            val dataList = getAvailableCurrenciesUseCase()
+            val dataList = getAvailableCurrenciesUseCase(true)
             adapter.currencyList = dataList.map { CurrencyModel(it.currencyAbbrev) }
-            adapter.notifyDataSetChanged()
+
+            withContext(Dispatchers.Main) {
+                adapter.notifyDataSetChanged()
+            }
         }
     }
 

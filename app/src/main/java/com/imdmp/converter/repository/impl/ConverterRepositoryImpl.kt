@@ -4,12 +4,13 @@ import com.imdmp.converter.repository.ConverterRepository
 import com.imdmp.converter.repository.database.dao.ConvertRecordDAO
 import com.imdmp.converter.repository.database.dao.CurrencyDAO
 import com.imdmp.converter.repository.database.dao.WalletDAO
+import com.imdmp.converter.repository.database.entity.CurrencyEntity
 import com.imdmp.converter.repository.network.ConverterService
-import com.imdmp.converter.schema.CurrencySchema
+import com.imdmp.converter.schema.ConvertCurrencySchema
 import com.imdmp.converter.schema.PullLatestRatesSchema
+import com.imdmp.converter.schema.SupportedCurrencySchema
 import com.imdmp.converter.schema.TransactionSchema
 import com.imdmp.converter.schema.WalletSchema
-import com.imdmp.converter.schema.convertToCurrencyEntity
 import com.imdmp.converter.schema.convertToPullLatestRatesSchema
 import com.imdmp.converter.schema.convertToWalletEntity
 import com.imdmp.converter.schema.convertToWalletSchema
@@ -30,9 +31,9 @@ class ConverterRepositoryImpl @Inject constructor(
         return jsonObject.convertToPullLatestRatesSchema()
     }
 
-    override suspend fun saveCurrencyIdList(currencyList: List<CurrencySchema>) {
+    override suspend fun saveSupportedCurrencyList(currencyList: List<SupportedCurrencySchema>) {
         currencyDAO.insertAllCurrencies(currencyList.map {
-            it.convertToCurrencyEntity()
+            CurrencyEntity(it.currencyAbbrev, it.name)
         })
     }
 
@@ -69,5 +70,34 @@ class ConverterRepositoryImpl @Inject constructor(
         return convertRecordDAO.getAllRecords()?.map {
             it.toTransactionSchema()
         } ?: listOf()
+    }
+
+    override suspend fun getSupportedCurrencies(fetchNew: Boolean): List<SupportedCurrencySchema> {
+        return if (fetchNew) {
+            val list = converterService.getSupportedCurrencies().symbols.map {
+                SupportedCurrencySchema(it.key, it.value)
+            }.toList()
+            saveSupportedCurrencyList(list)
+            list
+        } else {
+            currencyDAO.getAllCurrencies()?.map {
+                SupportedCurrencySchema(it.currencyId, it.fullName)
+            } ?: listOf()
+        }
+    }
+
+    override suspend fun convertCurrency(
+        sellData: Double,
+        sellCurrencyId: String,
+        receiveCurrencyId: String
+    ): ConvertCurrencySchema {
+        val result =
+            converterService.convertCurrency(sellCurrencyId, receiveCurrencyId, sellData.toString())
+
+        return ConvertCurrencySchema(
+            result.result,
+            result.info.timestamp,
+            result.info.rate
+        )
     }
 }

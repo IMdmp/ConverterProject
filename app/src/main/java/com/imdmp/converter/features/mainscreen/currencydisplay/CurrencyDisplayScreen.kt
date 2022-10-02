@@ -24,12 +24,15 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.UnfoldMore
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalTextInputService
@@ -67,14 +70,24 @@ fun CurrencyDisplayScreen(
     currencyDisplayCallbacks: CurrencyDisplayCallbacks,
     currencySelected: (t: TransactionType) -> Unit
 ) {
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
+    LaunchedEffect(key1 = Unit) {
+        focusRequester.requestFocus()
+    }
     Column(modifier = modifier) {
         ConvertRow(
             modifier = Modifier
-                .padding(top = 8.dp, bottom = 4.dp),
+                .padding(top = 8.dp, bottom = 4.dp)
+                .focusRequester(focusRequester),
             currency = model.sellCurrencyLabel,
             data = model.sellCurrencyData,
             type = "Sell",
-            inputBoxSelected = { currencyDisplayCallbacks.inputBoxSelected(SelectedInputBox.SELL) },
+            inputBoxSelected = {
+                currencyDisplayCallbacks.inputBoxSelected(SelectedInputBox.SELL)
+            },
             onValueUpdate = { sellData ->
 
             }
@@ -105,8 +118,6 @@ fun CurrencyDisplayScreen(
             }
 
         }
-
-
 
         ConvertRow(
             modifier = Modifier
@@ -151,7 +162,6 @@ fun ConvertRow(
         ConvertRowDataExchange(
             Modifier.weight(0.7f),
             data = data,
-            currency = currency,
             inputBoxSelected = inputBoxSelected,
             onValueUpdate = onValueUpdate,
         )
@@ -162,7 +172,6 @@ fun ConvertRow(
 fun ConvertRowDataExchange(
     modifier: Modifier = Modifier,
     data: String,
-    currency: String,
     inputBoxSelected: () -> Unit,
     onValueUpdate: (s: String) -> Unit = {},
 ) {

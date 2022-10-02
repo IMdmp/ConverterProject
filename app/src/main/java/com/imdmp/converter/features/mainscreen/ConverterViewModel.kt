@@ -13,6 +13,7 @@ import com.imdmp.converter.schema.ConvertUserWalletResultSchema
 import com.imdmp.converter.schema.WalletSchema
 import com.imdmp.converter.usecase.ConvertCurrencyUseCase
 import com.imdmp.converter.usecase.ConvertUserWalletCurrencyUseCase
+import com.imdmp.converter.usecase.GetAvailableCurrenciesUseCase
 import com.imdmp.converter.usecase.GetWalletBalanceUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +28,7 @@ class ConverterViewModel @Inject constructor(
     private val convertCurrencyUseCase: ConvertCurrencyUseCase,
     private val getWalletBalanceUseCase: GetWalletBalanceUseCase,
     private val convertUserWalletCurrencyUseCase: ConvertUserWalletCurrencyUseCase,
+    private val getAvailableCurrenciesUseCase: GetAvailableCurrenciesUseCase,
 ): BaseViewModel(), ConverterScreenCallbacks {
     private val _converterViewState = MutableLiveData(ConverterViewState.init())
     val converterViewState: LiveData<ConverterViewState> get() = _converterViewState
@@ -43,6 +45,7 @@ class ConverterViewModel @Inject constructor(
     init {
         viewModelScope.launch(Dispatchers.IO) {
             updateWalletBalance()
+            getAvailableCurrenciesUseCase(true)
 
             characterInput.collect {
                 val value = converterViewState.value!!
@@ -55,8 +58,10 @@ class ConverterViewModel @Inject constructor(
                                 receiveCurrencyData = result
                             )
                         )
-                        onBuyDataUpdated(result.toDouble())
-                        submitButtonEnabled.value = true
+                        if (result.isNotBlank()) {
+                            onBuyDataUpdated(result.toDouble())
+                            submitButtonEnabled.value = true
+                        }
                     }
 
                     SelectedInputBox.SELL -> {
@@ -66,9 +71,10 @@ class ConverterViewModel @Inject constructor(
                                 sellCurrencyData = result
                             )
                         )
-
-                        onSellDataUpdated(result.toDouble())
-                        submitButtonEnabled.value = true
+                        if (result.isNotBlank()) {
+                            onSellDataUpdated(result.toDouble())
+                            submitButtonEnabled.value = true
+                        }
                     }
                     else -> {}
                 }
@@ -191,7 +197,6 @@ class ConverterViewModel @Inject constructor(
                 withContext(Dispatchers.Main) {
                     _converterViewState.value = converterViewState.value?.copy(
                         receiveCurrencyData = resultData.toString(),
-                        sellCurrencyData = data.toString()
                     )
                 }
             }
@@ -206,7 +211,6 @@ class ConverterViewModel @Inject constructor(
                 withContext(Dispatchers.Main) {
                     _converterViewState.value = converterViewState.value?.copy(
                         sellCurrencyData = resultData.toString(),
-                        receiveCurrencyData = data.toString(),
                     )
                 }
             }

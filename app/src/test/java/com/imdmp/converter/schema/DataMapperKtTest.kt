@@ -32,18 +32,19 @@ class DataMapperKtTest {
             WalletSchema(currencyAbbrev = expectedCurrency, currencyValue = expectedBalance)
         val resultEntity = schema.convertToWalletEntity()
 
-        assertEquals(schema.currencyAbbrev, resultEntity.currency)
+        assertEquals(schema.currencyAbbrev, resultEntity.currencyId)
         assertEquals(schema.currencyValue, resultEntity.balance, DELTA)
     }
 
     @Test
     fun `CurrencySchema converts to CurrencyEntity correctly`() {
         val expectedCurrency = "ABC"
-
-        val schema = CurrencySchema(currencyAbbrev = expectedCurrency)
+        val expectedName = "abcsa"
+        val schema = SupportedCurrencySchema(currencyAbbrev = expectedCurrency, expectedName)
         val resultEntity = schema.convertToCurrencyEntity()
 
-        assertEquals(schema.currencyAbbrev, resultEntity.currencyId)
+        assertEquals(expectedCurrency, resultEntity.currencyId)
+        assertEquals(expectedName, resultEntity.fullName)
     }
 
     @Test
@@ -80,12 +81,12 @@ class DataMapperKtTest {
         val expectedBalance2 = Random.nextDouble()
 
         val expectedSellEntity = WalletEntity(
-            currency = expectedCurrency,
+            currencyId = expectedCurrency,
             balance = expectedBalance
         )
 
         val expectedBuyEntity = WalletEntity(
-            currency = expectedCurrency2,
+            currencyId = expectedCurrency2,
             balance = expectedBalance2
         )
 

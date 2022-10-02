@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "UserWallet")
 data class WalletEntity(
-    @PrimaryKey val currency: String,
+    @PrimaryKey val currencyId: String,
     val balance: Double
 ) {
 
