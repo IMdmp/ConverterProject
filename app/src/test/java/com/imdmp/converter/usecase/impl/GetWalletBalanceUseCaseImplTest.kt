@@ -10,7 +10,6 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
-import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -30,14 +29,20 @@ class GetWalletBalanceUseCaseImplTest {
 
     @Test
     fun `useCalls invoke called ConverterRepository and returns WalletSchema List`() {
-        val expected: List<WalletSchema> = mock()
+        val expected: List<WalletSchema> = listOf(
+            WalletSchema(
+                currencyAbbrev = "abc",
+                currencyValue = 10.0
+            ),
+            WalletSchema(currencyAbbrev = "zbc", currencyValue = 110.0)
+        )
 
         runTest {
             whenever(mockedConverterRepository.getWalletBalance()).thenReturn(expected)
             val result = useCase()
-
+            val expectedResult = expected.sortedByDescending { it.currencyValue }
             verify(mockedConverterRepository).getWalletBalance()
-            assertEquals(expected, result)
+            assertEquals(expectedResult, result)
         }
     }
 }
