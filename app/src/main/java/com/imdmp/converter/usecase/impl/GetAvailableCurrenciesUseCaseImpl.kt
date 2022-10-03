@@ -9,6 +9,13 @@ class GetAvailableCurrenciesUseCaseImpl @Inject constructor(
     private val converterRepository: ConverterRepository
 ): GetAvailableCurrenciesUseCase {
     override suspend fun invoke(fromCache: Boolean): List<SupportedCurrencySchema> {
+        if (fromCache) {
+            val list = converterRepository.getSupportedCurrencies(fromCache)
+            return list.ifEmpty {
+                converterRepository.getSupportedCurrencies(fromCache.not())
+            }
+        }
+
         return converterRepository.getSupportedCurrencies(fromCache.not())
     }
 }

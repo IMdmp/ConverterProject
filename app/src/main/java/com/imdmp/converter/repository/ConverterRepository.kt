@@ -16,7 +16,7 @@ interface ConverterRepository {
     suspend fun getNumberOfTransactions(): Int
     suspend fun getTransactionsWithCurrencyLike(walletSchema: WalletSchema): List<TransactionSchema>
     suspend fun getAllTransactions(walletSchema: WalletSchema): List<TransactionSchema>
-    suspend fun getSupportedCurrencies(fetchNew: Boolean): List<SupportedCurrencySchema>
+    suspend fun getSupportedCurrencies(fromCache: Boolean): List<SupportedCurrencySchema>
     suspend fun convertCurrency(
         sellData: Double,
         sellCurrencyId: String,

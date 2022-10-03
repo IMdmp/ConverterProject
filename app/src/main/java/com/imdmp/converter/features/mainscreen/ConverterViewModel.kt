@@ -22,9 +22,11 @@ import com.imdmp.converter.usecase.GetAvailableCurrenciesUseCase
 import com.imdmp.converter.usecase.GetWalletBalanceUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.math.RoundingMode
@@ -41,29 +43,101 @@ class ConverterViewModel @Inject constructor(
     private val convertUserWalletCurrencyUseCase: ConvertUserWalletCurrencyUseCase,
     private val getAvailableCurrenciesUseCase: GetAvailableCurrenciesUseCase,
 ): BaseViewModel(), ConverterScreenCallbacks {
-    private val _converterViewState = MutableLiveData(ConverterViewState.init())
-    val converterViewState: LiveData<ConverterViewState> get() = _converterViewState
+    val converterViewState = mutableStateOf(ConverterViewState.init())
+    val walletBalance: LiveData<SnapshotStateList<WalletSchema>> get() = _walletBalance
+    var submitButtonEnabled = mutableStateOf(false)
+    var showBalanceConvertSuccess = mutableStateOf(Pair(false, ""))
 
     private val _walletBalance = MutableLiveData<SnapshotStateList<WalletSchema>>()
-    val walletBalance: LiveData<SnapshotStateList<WalletSchema>> get() = _walletBalance
-
-    var selectedInputBox = SelectedInputBox.SELL
-    var submitButtonEnabled = mutableStateOf(false)
-
-    var characterInput = MutableSharedFlow<Char>()
-    var showBalanceConvertSuccess = mutableStateOf(Pair(false, ""))
-    val df = DecimalFormat(
-        Constants.DECIMAL_FORMAT, DecimalFormatSymbols.getInstance(
+    private var selectedInputBox = SelectedInputBox.SELL
+    private var characterInput = MutableSharedFlow<Char>()
+    private val df = DecimalFormat(
+        Constants.DECIMAL_FORMAT,
+        DecimalFormatSymbols.getInstance(
             Locale.US
-        )
-    )
+        ),
+    ).apply {
+        this.roundingMode = RoundingMode.CEILING
+    }
+    val handler = CoroutineExceptionHandler { context, exception ->
+    }
+    private val getCurrencyJob = viewModelScope.launch(coroutineDispatcher + handler) {
+        getAvailableCurrenciesUseCase(false)
+    }
 
     init {
-        df.roundingMode = RoundingMode.CEILING
+        getCurrencyJob.start()
 
         viewModelScope.launch(coroutineDispatcher) {
             updateWalletBalance()
-            getAvailableCurrenciesUseCase(true)
+            characterInput.collectLatest {
+                handleCharacterInput(it)
+            }
+        }
+    }
+
+    private suspend fun handleCharacterInput(c: Char) {
+        val value = converterViewState.value
+
+        when (selectedInputBox) {
+            SelectedInputBox.RECEIVE -> {
+                val result = sanitizeData(value.receiveCurrencyData, c)
+                runMain {
+                    converterViewState.value =
+                        value.copy(
+                            receiveCurrencyData = result
+                        )
+                }
+
+                if (result.isNotBlank()) {
+                    retrieveData(result.toDouble()) { convertSchema ->
+                        converterViewState.value = (
+                            converterViewState.value.copy(
+                                sellCurrencyData = df.format(convertSchema.convertedCurrencyResult)
+                            )
+                            )
+                        submitButtonEnabled.value = true
+                    }
+
+                } else {
+                    runMain {
+                        converterViewState.value = converterViewState.value.copy(
+                            sellCurrencyData = "",
+                            retrievingRate = false
+                        )
+                    }
+                }
+            }
+
+            SelectedInputBox.SELL -> {
+                val result = sanitizeData(value.sellCurrencyData, c)
+                runMain {
+                    converterViewState.value =
+                        value.copy(
+                            sellCurrencyData = result
+                        )
+                }
+
+                if (result.isNotBlank()) {
+                    retrieveData(result.toDouble()) { convertSchema ->
+                        converterViewState.value = (
+                            converterViewState.value.copy(
+                                receiveCurrencyData = df.format(convertSchema.convertedCurrencyResult)
+                            )
+                            )
+                        submitButtonEnabled.value = true
+
+                    }
+
+                } else {
+                    runMain {
+                        converterViewState.value = converterViewState.value.copy(
+                            receiveCurrencyData = "",
+                            retrievingRate = false
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -81,7 +155,7 @@ class ConverterViewModel @Inject constructor(
 
     fun convertCurrency() {
         viewModelScope.launch(coroutineDispatcher) {
-            val value = converterViewState.value!!
+            val value = converterViewState.value
             val sellWalletSchema = WalletSchema(
                 currencyAbbrev = value.sellCurrencyLabel,
                 currencyValue = value.sellCurrencyData.toDouble()
@@ -98,8 +172,8 @@ class ConverterViewModel @Inject constructor(
                 when (result) {
                     is ConvertUserWalletResultSchema.Error -> {
                         runMain {
-                            _converterViewState.value = (
-                                converterViewState.value?.copy(
+                            converterViewState.value = (
+                                converterViewState.value.copy(
                                     converterDataLoading = false,
                                 ))
                         }
@@ -112,8 +186,8 @@ class ConverterViewModel @Inject constructor(
                     }
                     is ConvertUserWalletResultSchema.Loading -> {
                         runMain {
-                            _converterViewState.value = (
-                                converterViewState.value?.copy(
+                            converterViewState.value = (
+                                converterViewState.value.copy(
                                     converterDataLoading = true,
                                 )
                                 )
@@ -122,8 +196,8 @@ class ConverterViewModel @Inject constructor(
                     }
                     is ConvertUserWalletResultSchema.Success -> {
                         runMain {
-                            _converterViewState.value = (
-                                converterViewState.value?.copy(
+                            converterViewState.value = (
+                                converterViewState.value.copy(
                                     converterDataLoading = false,
                                 )
                                 )
@@ -144,34 +218,34 @@ class ConverterViewModel @Inject constructor(
     }
 
     private fun emptyFields() {
-        _converterViewState.postValue(
-            converterViewState.value?.copy(receiveCurrencyData = "", sellCurrencyData = "")
-        )
+        converterViewState.value = (
+            converterViewState.value.copy(receiveCurrencyData = "", sellCurrencyData = "")
+            )
         submitButtonEnabled.value = false
 
     }
 
     private suspend fun updateWalletBalance() {
-        val walletData = getWalletBalanceUseCase()?.toMutableStateList()
+        val walletData = getWalletBalanceUseCase().toMutableStateList()
         _walletBalance.postValue(walletData)
     }
 
     fun updateCurrency(currencyModel: CurrencyModel, transactionType: TransactionType) {
         when (transactionType) {
             TransactionType.RECEIVE -> {
-                if (currencyModel.abbrev == converterViewState.value?.sellCurrencyLabel) {
+                if (currencyModel.abbrev == converterViewState.value.sellCurrencyLabel) {
                     switchCurrencyLabels()
                 } else {
-                    _converterViewState.value =
-                        converterViewState.value?.copy(receiveCurrencyLabel = currencyModel.abbrev)
+                    converterViewState.value =
+                        converterViewState.value.copy(receiveCurrencyLabel = currencyModel.abbrev)
                 }
             }
             TransactionType.SELL -> {
-                if (currencyModel.abbrev == converterViewState.value?.receiveCurrencyLabel) {
+                if (currencyModel.abbrev == converterViewState.value.receiveCurrencyLabel) {
                     switchCurrencyLabels()
                 } else {
-                    _converterViewState.value =
-                        converterViewState.value?.copy(sellCurrencyLabel = currencyModel.abbrev)
+                    converterViewState.value =
+                        converterViewState.value.copy(sellCurrencyLabel = currencyModel.abbrev)
                 }
             }
         }
@@ -182,14 +256,14 @@ class ConverterViewModel @Inject constructor(
     }
 
     override fun switchCurrencyLabels() {
-        converterViewState.value?.also {
+        converterViewState.value.also {
             val temp = it.receiveCurrencyLabel
-            _converterViewState.postValue(
+            converterViewState.value =
                 it.copy(
                     receiveCurrencyLabel = it.sellCurrencyLabel,
                     sellCurrencyLabel = temp
                 )
-            )
+
         }
     }
 
@@ -197,42 +271,40 @@ class ConverterViewModel @Inject constructor(
         data: Double,
         onSuccess: (convert: ConvertCurrencySchema) -> Unit
     ) {
-        converterViewState.value?.let {
-            val resultData =
-                convertCurrencyUseCase(data, it.sellCurrencyLabel, it.receiveCurrencyLabel)
+        val resultData =
+            convertCurrencyUseCase(
+                data,
+                converterViewState.value.sellCurrencyLabel,
+                converterViewState.value.receiveCurrencyLabel
+            )
 
-            resultData.collect { convertSchema ->
-                when (convertSchema) {
-                    is ConvertCurrencyFlowSchema.Error -> {
-                        runMain {
-
-                            _converterViewState.value = (
-                                converterViewState.value?.copy(retrievingRate = false)
-                                )
-                        }
-                        sendEvent(Event.ShowError(R.string.get_exhange_rates_error))
-
+        resultData.collect { convertSchema ->
+            when (convertSchema) {
+                is ConvertCurrencyFlowSchema.Error -> {
+                    runMain {
+                        converterViewState.value =
+                            (converterViewState.value.copy(retrievingRate = false))
                     }
-                    is ConvertCurrencyFlowSchema.Loading ->
-                        runMain {
-                            _converterViewState.value = (
-                                converterViewState.value?.copy(retrievingRate = true)
-                                )
-                        }
-                    is ConvertCurrencyFlowSchema.Success -> {
-                        runMain {
-                            _converterViewState.value = (
-                                converterViewState.value?.copy(retrievingRate = false)
-                                )
-                        }
-                        onSuccess(
-                            ConvertCurrencySchema(
-                                convertSchema.convertedCurrencyResult,
-                                convertSchema.timeStamp,
-                                convertSchema.rate
-                            )
+                    sendEvent(Event.ShowError(R.string.get_exhange_rates_error))
+                }
+
+                is ConvertCurrencyFlowSchema.Loading ->
+                    runMain {
+                        converterViewState.value =
+                            (converterViewState.value.copy(retrievingRate = true))
+                    }
+                is ConvertCurrencyFlowSchema.Success -> {
+                    runMain {
+                        converterViewState.value =
+                            (converterViewState.value.copy(retrievingRate = false))
+                    }
+                    onSuccess(
+                        ConvertCurrencySchema(
+                            convertSchema.convertedCurrencyResult,
+                            convertSchema.timeStamp,
+                            convertSchema.rate
                         )
-                    }
+                    )
                 }
             }
         }
@@ -252,68 +324,7 @@ class ConverterViewModel @Inject constructor(
 
     override fun characterEmitted(c: Char) {
         viewModelScope.launch(coroutineDispatcher) {
-            val value = converterViewState.value!!
-
-            when (selectedInputBox) {
-                SelectedInputBox.RECEIVE -> {
-                    val result = sanitizeData(value.receiveCurrencyData, c)
-                    runMain {
-                        _converterViewState.value =
-                            value.copy(
-                                receiveCurrencyData = result
-                            )
-                    }
-
-                    if (result.isNotBlank()) {
-                        retrieveData(result.toDouble()) { convertSchema ->
-                            _converterViewState.postValue(
-                                converterViewState.value?.copy(
-                                    sellCurrencyData = df.format(convertSchema.convertedCurrencyResult)
-                                )
-                            )
-                            submitButtonEnabled.value = true
-                        }
-
-                    } else {
-                        runMain {
-                            _converterViewState.value = converterViewState.value?.copy(
-                                sellCurrencyData = "",
-                                retrievingRate = false
-                            )
-                        }
-                    }
-                }
-
-                SelectedInputBox.SELL -> {
-                    val result = sanitizeData(value.sellCurrencyData, c)
-                    runMain {
-                        _converterViewState.value =
-                            value.copy(
-                                sellCurrencyData = result
-                            )
-                    }
-
-                    if (result.isNotBlank()) {
-                        retrieveData(result.toDouble()) { convertSchema ->
-                            _converterViewState.postValue(
-                                converterViewState.value?.copy(
-                                    receiveCurrencyData = df.format(convertSchema.convertedCurrencyResult)
-                                )
-                            )
-                            submitButtonEnabled.value = true
-
-                        }
-
-                    } else {
-                        runMain {
-                            _converterViewState.value = converterViewState.value?.copy(
-                                receiveCurrencyData = "",
-                                retrievingRate = false
-                            )
-                        }
-                    }
-                }
-            }
+            characterInput.emit(c)
         }
     }
 

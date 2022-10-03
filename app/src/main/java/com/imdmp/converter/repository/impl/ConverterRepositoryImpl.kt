@@ -72,17 +72,17 @@ class ConverterRepositoryImpl @Inject constructor(
         } ?: listOf()
     }
 
-    override suspend fun getSupportedCurrencies(fetchNew: Boolean): List<SupportedCurrencySchema> {
-        return if (fetchNew) {
+    override suspend fun getSupportedCurrencies(fromCache: Boolean): List<SupportedCurrencySchema> {
+        return if (fromCache) {
+            currencyDAO.getAllCurrencies()?.map {
+                SupportedCurrencySchema(it.currencyId, it.fullName)
+            } ?: listOf()
+        } else {
             val list = converterService.getSupportedCurrencies().symbols.map {
                 SupportedCurrencySchema(it.key, it.value)
             }.toList()
             saveSupportedCurrencyList(list)
             list
-        } else {
-            currencyDAO.getAllCurrencies()?.map {
-                SupportedCurrencySchema(it.currencyId, it.fullName)
-            } ?: listOf()
         }
     }
 

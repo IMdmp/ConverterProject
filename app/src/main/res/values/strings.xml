@@ -12,4 +12,5 @@
     <string name="convert_again">Convert Again</string>
     <string name="my_balances">My Balances</string>
     <string name="swap_currency">swap currency</string>
+    <string name="error_occurred_please_try_again">Error occurred. Please try again</string>
 </resources>

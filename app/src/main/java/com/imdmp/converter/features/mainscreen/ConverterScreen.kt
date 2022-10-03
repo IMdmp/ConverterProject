@@ -52,7 +52,8 @@ fun ConverterScreen(
     converterScreenActivityCallbacks: ConverterScreenActivityCallbacks
 ) {
     val viewState =
-        converterViewModel.converterViewState.observeAsState(ConverterViewState.init()).value
+        converterViewModel.converterViewState.value
+
     val walletListState = converterViewModel.walletBalance.observeAsState().value
     val state = rememberScaffoldState()
     val submitButtonEnabled = converterViewModel.submitButtonEnabled.value

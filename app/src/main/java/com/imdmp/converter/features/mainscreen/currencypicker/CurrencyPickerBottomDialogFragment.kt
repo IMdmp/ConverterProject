@@ -7,6 +7,8 @@ import android.view.ViewGroup
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.snackbar.Snackbar
+import com.imdmp.converter.R
 import com.imdmp.converter.databinding.FragmentCurrencyPickerBottomDialogBinding
 import com.imdmp.converter.usecase.GetAvailableCurrenciesUseCase
 import dagger.hilt.android.AndroidEntryPoint
@@ -45,8 +47,16 @@ class CurrencyPickerBottomDialogFragment: BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         lifecycleScope.launch(Dispatchers.IO) {
-            val dataList = getAvailableCurrenciesUseCase(true)
-            adapter.currencyList = dataList.map { CurrencyModel(it.currencyAbbrev) }
+            try {
+                val dataList = getAvailableCurrenciesUseCase(true)
+                adapter.currencyList = dataList.map { CurrencyModel(it.currencyAbbrev) }
+            } catch (e: Exception) {
+                Snackbar.make(
+                    view.findViewById(android.R.id.content),
+                    getString(R.string.error_occurred_please_try_again),
+                    Snackbar.LENGTH_SHORT
+                ).show()
+            }
 
             withContext(Dispatchers.Main) {
                 adapter.notifyDataSetChanged()
