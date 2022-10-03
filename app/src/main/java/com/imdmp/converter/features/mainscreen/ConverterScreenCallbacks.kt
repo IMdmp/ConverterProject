@@ -12,14 +12,6 @@ interface ConverterScreenCallbacks: CurrencyDisplayCallbacks, NumberScreenCallba
                     TODO("Not yet implemented")
                 }
 
-                override fun onSellDataUpdated(data: Double) {
-                    TODO("Not yet implemented")
-                }
-
-                override fun onBuyDataUpdated(data: Double) {
-                    TODO("Not yet implemented")
-                }
-
                 override fun switchCurrencyLabels() {
                     TODO("Not yet implemented")
                 }

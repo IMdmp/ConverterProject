@@ -9,7 +9,7 @@ import java.math.BigDecimal
 
 fun WalletEntity.convertToWalletSchema(): WalletSchema {
     return WalletSchema(
-        this.currency,
+        this.currencyId,
         this.balance
     )
 }
@@ -21,8 +21,8 @@ fun WalletSchema.convertToWalletEntity(): WalletEntity {
     )
 }
 
-fun CurrencySchema.convertToCurrencyEntity(): CurrencyEntity {
-    return CurrencyEntity(this.currencyAbbrev)
+fun SupportedCurrencySchema.convertToCurrencyEntity(): CurrencyEntity {
+    return CurrencyEntity(this.currencyAbbrev, this.name)
 }
 
 fun TransactionSchema.toConvertRecordEntity(): ConvertRecordEntity {

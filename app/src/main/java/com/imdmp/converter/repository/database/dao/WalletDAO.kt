@@ -18,6 +18,6 @@ interface WalletDAO {
     @Insert(onConflict = REPLACE)
     fun insertAllWallet(walletEntity: List<WalletEntity>)
 
-    @Query("SELECT * FROM UserWallet WHERE currency = :currencyId ")
+    @Query("SELECT * FROM UserWallet WHERE currencyId = :currencyId ")
     fun getWallet(currencyId: String): WalletEntity?
 }

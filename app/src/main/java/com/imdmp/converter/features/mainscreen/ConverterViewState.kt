@@ -6,6 +6,7 @@ data class ConverterViewState(
     val sellCurrencyData: String,
     val receiveCurrencyLabel: String,
     val receiveCurrencyData: String,
+    val retrievingRate: Boolean = false,
 ) {
     companion object {
         fun init(): ConverterViewState {
@@ -15,6 +16,7 @@ data class ConverterViewState(
                 sellCurrencyData = "",
                 receiveCurrencyLabel = "USD",
                 receiveCurrencyData = "",
+                retrievingRate = false
             )
         }
     }

@@ -7,7 +7,7 @@ import com.imdmp.converter.repository.database.dao.WalletDAO
 import com.imdmp.converter.repository.database.entity.WalletEntity
 import com.imdmp.converter.repository.impl.ConverterRepositoryImpl
 import com.imdmp.converter.repository.network.ConverterService
-import com.imdmp.converter.schema.CurrencySchema
+import com.imdmp.converter.schema.SupportedCurrencySchema
 import com.imdmp.converter.schema.TransactionSchema
 import com.imdmp.converter.schema.WalletSchema
 import com.imdmp.converter.schema.convertToCurrencyEntity
@@ -87,10 +87,10 @@ class ConverterRepositoryImplTest {
 
 
     @Test
-    fun `saveCurrencyIdList should call CurrencyDao when success`() {
+    fun `saveSupportedCurrencyList should call CurrencyDao when success`() {
         runBlocking {
-            val expectedList = listOf<CurrencySchema>()
-            repository.saveCurrencyIdList(expectedList)
+            val expectedList = listOf<SupportedCurrencySchema>()
+            repository.saveSupportedCurrencyList(expectedList)
 
             verify(mockedCurrencyDAO).insertAllCurrencies(expectedList.map {
                 it.convertToCurrencyEntity()

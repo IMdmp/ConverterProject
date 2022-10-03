@@ -28,15 +28,21 @@ android {
             properties.load(project.rootProject.file('local.properties').newDataInputStream())
             buildConfigField "String", "BASE_API_URL", "\"https://api.apilayer.com/\""
             buildConfigField "String", "API_KEY","\"${properties.getProperty('API_KEY')}\""
+            buildConfigField "Boolean", "MOCK_RESPONSE", "false"
+
         }
 
         release {
             buildConfigField "String", "BASE_API_URL", "\"https://api.apilayer.com/\""
             buildConfigField "String", "API_KEY","\"\""
+            buildConfigField "Boolean", "MOCK_RESPONSE", "false"
 
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+    lintOptions {
+        abortOnError false
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
@@ -112,9 +118,11 @@ dependencies {
     testImplementation "org.mockito.kotlin:mockito-kotlin:${mockitoVersion}"
     def coroutine_test_version = "1.6.0"
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutine_test_version"
+    testImplementation "androidx.arch.core:core-testing:2.1.0"
 
     def mockito_inline_version= "3.8.0"
     testImplementation("org.mockito:mockito-inline:$mockito_inline_version")
+    testImplementation 'app.cash.turbine:turbine:0.11.0'
 
     implementation "androidx.constraintlayout:constraintlayout-compose:1.0.1"
     implementation "androidx.compose.runtime:runtime-livedata:1.2.1"

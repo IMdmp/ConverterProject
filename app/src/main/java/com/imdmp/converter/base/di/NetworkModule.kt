@@ -10,6 +10,7 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 
 @InstallIn(SingletonComponent::class)
@@ -21,7 +22,7 @@ class NetworkModule {
         val logging = HttpLoggingInterceptor()
         logging.setLevel(HttpLoggingInterceptor.Level.BASIC)
         logging.redactHeader("Authorization")
-        logging.redactHeader("Cookie");
+        logging.redactHeader("Cookie")
 
         return OkHttpClient.Builder()
             .addInterceptor(logging)
@@ -37,6 +38,7 @@ class NetworkModule {
             .baseUrl(BuildConfig.BASE_API_URL)
             .client(client)
             .addConverterFactory(ScalarsConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
 

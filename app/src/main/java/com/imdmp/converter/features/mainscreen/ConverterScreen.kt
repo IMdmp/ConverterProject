@@ -25,11 +25,14 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import com.imdmp.converter.R
 import com.imdmp.converter.base.BaseViewModel
 import com.imdmp.converter.features.mainscreen.currencydisplay.CurrencyDisplayComposeModel
 import com.imdmp.converter.features.mainscreen.currencydisplay.CurrencyDisplayScreen
@@ -49,10 +52,12 @@ fun ConverterScreen(
     converterScreenActivityCallbacks: ConverterScreenActivityCallbacks
 ) {
     val viewState =
-        converterViewModel.converterViewState.observeAsState(ConverterViewState.init()).value
+        converterViewModel.converterViewState.value
+
     val walletListState = converterViewModel.walletBalance.observeAsState().value
     val state = rememberScaffoldState()
     val submitButtonEnabled = converterViewModel.submitButtonEnabled.value
+    val context = LocalContext.current
 
     LaunchedEffect(key1 = Unit) {
         converterViewModel.eventsFlow.collectLatest { value ->
@@ -60,14 +65,16 @@ fun ConverterScreen(
                 // Handle events
                 is BaseViewModel.Event.ShowSnackbarString -> {
                     state.snackbarHostState.showSnackbar(
-                        value.message + "success",
-                        actionLabel = "close"
+                        value.message,
+                        actionLabel = context.getString(R.string.close)
                     )
                 }
 
                 is BaseViewModel.Event.ShowError -> {
+                    val errorMessage = context.getString(value.messageResource)
                     state.snackbarHostState.showSnackbar(
-                        "ERROR!" + "error"
+                        errorMessage,
+                        actionLabel = context.getString(R.string.close)
                     )
                 }
             }
@@ -151,9 +158,10 @@ private fun ConverterScreen(
                 },
                 model = CurrencyDisplayComposeModel(
                     sellCurrencyLabel = viewState.sellCurrencyLabel,
-                    sellCurrencyData = viewState.sellCurrencyData.toString(),
+                    sellCurrencyData = viewState.sellCurrencyData,
                     receiveCurrencyLabel = viewState.receiveCurrencyLabel,
-                    receiveCurrencyData = viewState.receiveCurrencyData.toString()
+                    receiveCurrencyData = viewState.receiveCurrencyData,
+                    retrievingRate = viewState.retrievingRate,
                 ),
                 currencyDisplayCallbacks = converterScreenCallbacks,
                 currencySelected = currencySelected
@@ -207,7 +215,7 @@ private fun ConverterScreen(
                 onClick = {
                     convertData()
                 }) {
-                Text("Submit")
+                Text(stringResource(R.string.submit))
             }
 
         }
@@ -216,7 +224,11 @@ private fun ConverterScreen(
 
 @Composable
 fun SuccessBox(modifier: Modifier, pairData: Pair<Boolean, String>, onClick: () -> Unit) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.Center) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Text(
             pairData.second,
             style = Typography.h4.copy(color = Color.Green),
@@ -224,7 +236,7 @@ fun SuccessBox(modifier: Modifier, pairData: Pair<Boolean, String>, onClick: () 
         )
 
         Button(onClick = onClick) {
-            Text("Convert Again")
+            Text(stringResource(R.string.convert_again))
         }
     }
 }
@@ -235,7 +247,7 @@ fun BalanceRow(modifier: Modifier, walletList: List<WalletSchema>) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             modifier = Modifier.align(Alignment.Start),
-            text = "My Balances",
+            text = stringResource(R.string.my_balances),
             style = Typography.h4
         )
         Row(
