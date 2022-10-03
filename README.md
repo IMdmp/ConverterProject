@@ -15,6 +15,12 @@ in local.properties, add this: (no quotes "")
 API_KEY = <key>
 ```
 
+### Usage of mockAPI
+Since it's costly to keep calling convert api, mock api can be used in debug build. simply change in app build.gradle: 
+```
+            buildConfigField "Boolean", "MOCK_RESPONSE", "false" <--set to true
+```
+
 ### Libraries used
 - Dagger2 + Hilt 
 - Jetpack compose
