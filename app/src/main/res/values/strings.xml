@@ -1,4 +1,15 @@
 <resources>
     <string name="app_name">Converter</string>
+    <string name="close">close</string>
     <string name="currency_picker_label_currency">Currency</string>
+    <string name="currency_display_type_buy">Buy</string>
+    <string name="currency_display_type_sell">Sell</string>
+    <string name="get_exhange_rates_error">Error getting exchange rates</string>
+    <string name="general_error">General Error</string>
+    <string name="user_not_enough_balance">Not enough balance</string>
+    <string name="user_not_enough_balance_after_commission">Balance too low for commission rate</string>
+    <string name="submit">Submit</string>
+    <string name="convert_again">Convert Again</string>
+    <string name="my_balances">My Balances</string>
+    <string name="swap_currency">swap currency</string>
 </resources>

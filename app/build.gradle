@@ -35,7 +35,7 @@ android {
         release {
             buildConfigField "String", "BASE_API_URL", "\"https://api.apilayer.com/\""
             buildConfigField "String", "API_KEY","\"\""
-            buildConfigField "String", "MOCK_RESPONSE", "false"
+            buildConfigField "Boolean", "MOCK_RESPONSE", "false"
 
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'

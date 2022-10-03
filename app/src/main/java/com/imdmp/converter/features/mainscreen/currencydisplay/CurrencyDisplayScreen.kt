@@ -37,6 +37,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalTextInputService
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
@@ -44,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.imdmp.converter.R
 import com.imdmp.converter.features.mainscreen.SelectedInputBox
 import com.imdmp.converter.features.mainscreen.TransactionType
 import com.imdmp.converter.features.ui.theme.PurpleCustom
@@ -54,12 +56,23 @@ interface CurrencyDisplayCallbacks {
     fun inputBoxSelected(selectedInputBox: SelectedInputBox)
 }
 
+enum class CurrencyType(val resource: Int) {
+    SELL(R.string.currency_display_type_sell), BUY(R.string.currency_display_type_buy)
+}
+
 data class CurrencyDisplayComposeModel(
     val sellCurrencyLabel: String,
     val sellCurrencyData: String,
     val receiveCurrencyLabel: String,
     val receiveCurrencyData: String,
     val retrievingRate: Boolean,
+)
+
+data class ConvertRowComposeModel(
+    val label: String,
+    val data: String,
+    val retrievingRate: Boolean,
+    val type: CurrencyType,
 )
 
 
@@ -70,31 +83,33 @@ fun CurrencyDisplayScreen(
     currencyDisplayCallbacks: CurrencyDisplayCallbacks,
     currencySelected: (t: TransactionType) -> Unit
 ) {
-    val focusRequester = remember {
-        FocusRequester()
-    }
 
-    LaunchedEffect(key1 = Unit) {
-        focusRequester.requestFocus()
-    }
+    val sellModel = ConvertRowComposeModel(
+        label = model.sellCurrencyLabel,
+        data = model.sellCurrencyData,
+        retrievingRate = model.retrievingRate,
+        type = CurrencyType.SELL
+    )
+
+    val buyModel = ConvertRowComposeModel(
+        label = model.receiveCurrencyLabel,
+        data = model.receiveCurrencyData,
+        retrievingRate = model.retrievingRate,
+        type = CurrencyType.BUY
+    )
+
     Column(modifier = modifier) {
         ConvertRow(
             modifier = Modifier
-                .padding(top = 8.dp, bottom = 4.dp)
-                .focusRequester(focusRequester),
-            currency = model.sellCurrencyLabel,
-            data = model.sellCurrencyData,
-            type = "Sell",
-            rateLoading = model.retrievingRate,
+                .padding(top = 8.dp, bottom = 4.dp),
+            model = sellModel,
             inputBoxSelected = {
                 currencyDisplayCallbacks.inputBoxSelected(SelectedInputBox.SELL)
             },
-            onValueUpdate = { sellData ->
-
-            }
         ) {
             currencySelected(TransactionType.SELL)
         }
+
         Box(modifier = Modifier.fillMaxWidth()) {
             Box(
                 modifier = Modifier
@@ -113,7 +128,7 @@ fun CurrencyDisplayScreen(
                     currencyDisplayCallbacks.switchCurrencyLabels()
                 }) {
                 Icon(
-                    Icons.Rounded.UnfoldMore, "swap currency",
+                    Icons.Rounded.UnfoldMore, stringResource(R.string.swap_currency),
                     tint = Color.White
                 )
             }
@@ -123,15 +138,10 @@ fun CurrencyDisplayScreen(
         ConvertRow(
             modifier = Modifier
                 .padding(top = 4.dp, bottom = 8.dp),
-            currency = model.receiveCurrencyLabel,
-            data = model.receiveCurrencyData,
-            type = "Buy",
-            rateLoading = model.retrievingRate,
+            model = buyModel,
             inputBoxSelected = {
                 currencyDisplayCallbacks.inputBoxSelected(selectedInputBox = SelectedInputBox.RECEIVE)
             },
-            onValueUpdate = { receiveData ->
-            }
         ) {
             currencySelected(TransactionType.RECEIVE)
         }
@@ -143,14 +153,11 @@ fun CurrencyDisplayScreen(
 @Composable
 fun ConvertRow(
     modifier: Modifier,
-    type: String,
-    data: String,
-    currency: String,
-    rateLoading: Boolean,
+    model: ConvertRowComposeModel,
     inputBoxSelected: () -> Unit,
-    onValueUpdate: (s: String) -> Unit,
     onCurrencyClicked: () -> Unit
 ) {
+
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -158,16 +165,16 @@ fun ConvertRow(
     ) {
         ConvertRowLabel(
             Modifier.weight(0.3f),
-            type = type,
-            currency = currency,
+            type = model.type.resource,
+            currency = model.label,
             onCurrencyClicked = onCurrencyClicked
         )
         ConvertRowDataExchange(
             Modifier.weight(0.7f),
-            data = data,
-            rateLoading = rateLoading,
+            data = model.data,
+            rateLoading = model.retrievingRate,
             inputBoxSelected = inputBoxSelected,
-            onValueUpdate = onValueUpdate,
+            model = model
         )
     }
 }
@@ -178,7 +185,7 @@ fun ConvertRowDataExchange(
     data: String,
     inputBoxSelected: () -> Unit,
     rateLoading: Boolean,
-    onValueUpdate: (s: String) -> Unit = {},
+    model: ConvertRowComposeModel,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed: Boolean by interactionSource.collectIsPressedAsState()
@@ -190,8 +197,19 @@ fun ConvertRowDataExchange(
     val tfv =
         TextFieldValue(text = data, selection = TextRange(data.length))
 
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
+    if (model.type == CurrencyType.SELL) {
+        LaunchedEffect(key1 = Unit) {
+            focusRequester.requestFocus()
+        }
+    }
     Column(
-        modifier = modifier.padding(start = 16.dp, end = 16.dp),
+        modifier = modifier
+            .padding(start = 16.dp, end = 16.dp)
+            .focusRequester(focusRequester),
         verticalArrangement = Arrangement.SpaceAround
     ) {
         CompositionLocalProvider(
@@ -206,7 +224,6 @@ fun ConvertRowDataExchange(
                 keyboardOptions =
                 KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal),
                 onValueChange = { s: TextFieldValue ->
-                    onValueUpdate(s.text)
                 })
         }
 
@@ -225,7 +242,7 @@ fun ConvertRowDataExchange(
 @Composable
 private fun ConvertRowLabel(
     modifier: Modifier = Modifier,
-    type: String,
+    type: Int,
     currency: String,
     onCurrencyClicked: () -> Unit
 ) {
@@ -250,7 +267,7 @@ private fun ConvertRowLabel(
             top.linkTo(parent.top)
             bottom.linkTo(currLabel.top)
             start.linkTo(currIcon.end, 16.dp)
-        }, text = type, style = Typography.subtitle1)
+        }, text = stringResource(id = type), style = Typography.subtitle1)
 
         Text(
             text = currency, Modifier

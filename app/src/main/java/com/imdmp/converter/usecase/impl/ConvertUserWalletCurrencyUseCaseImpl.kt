@@ -1,5 +1,6 @@
 package com.imdmp.converter.usecase.impl
 
+import com.imdmp.converter.BuildConfig
 import com.imdmp.converter.base.di.NameAnnotationConstants
 import com.imdmp.converter.repository.ConverterRepository
 import com.imdmp.converter.schema.ConvertUserWalletCurrencyError
@@ -19,7 +20,7 @@ import javax.inject.Named
 
 class ConvertUserWalletCurrencyUseCaseImpl @Inject constructor(
     private val converterRepository: ConverterRepository,
-    @Named(NameAnnotationConstants.FREE_UP_TO_200_EUR)
+    @Named(NameAnnotationConstants.FREE_UP_TO_5_TRANSACTIONS)
     private val getCommissionChargeUseCase: GetCommissionChargeUseCase,
     private val saveTransactionUseCase: SaveTransactionUseCase
 ): ConvertUserWalletCurrencyUseCase {
@@ -27,7 +28,7 @@ class ConvertUserWalletCurrencyUseCaseImpl @Inject constructor(
         sellWalletSchema: WalletSchema,
         buyWalletSchema: WalletSchema
     ): Flow<ConvertUserWalletResultSchema> {
-        return flow<ConvertUserWalletResultSchema> {
+        return flow {
             val userSellBalance =
                 converterRepository.getWalletBalance(sellWalletSchema.currencyAbbrev)
                     ?: WalletSchema(
@@ -41,9 +42,13 @@ class ConvertUserWalletCurrencyUseCaseImpl @Inject constructor(
                         0.0
                     )
 
-            delay(2000)
+            if (BuildConfig.MOCK_RESPONSE) {
+                delay(2000)
+            }
+
             if (userSellBalance.currencyValue < sellWalletSchema.currencyValue) {
-                throw ConvertUserWalletCurrencyError.NotEnoughBalance
+                emit(ConvertUserWalletResultSchema.Error(ConvertUserWalletCurrencyError.NotEnoughBalance))
+                return@flow
             }
 
             val commissionCharge = getCommissionChargeUseCase(sellWalletSchema)
@@ -52,7 +57,8 @@ class ConvertUserWalletCurrencyUseCaseImpl @Inject constructor(
                 commissionCharge
 
             if (newSellValue < 0) {
-                throw ConvertUserWalletCurrencyError.NotEnoughBalanceAfterCommission
+                emit(ConvertUserWalletResultSchema.Error(ConvertUserWalletCurrencyError.NotEnoughBalanceAfterCommission))
+                return@flow
             }
 
             val newBuyValue = userBuyBalance.currencyValue + buyWalletSchema.currencyValue
@@ -74,9 +80,9 @@ class ConvertUserWalletCurrencyUseCaseImpl @Inject constructor(
                     buyWalletSchema
                 )
             )
+            return@flow
         }.catch {
-
-            emit(ConvertUserWalletResultSchema.Error(""))
+            emit(ConvertUserWalletResultSchema.Error(ConvertUserWalletCurrencyError.GeneralError))
         }.onStart {
             emit(ConvertUserWalletResultSchema.Loading)
         }
