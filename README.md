@@ -1,6 +1,6 @@
 # ConverterProject
 
-### Note: API provided in technical exam is not working anymore. it has been changed to apilayer.
+### Note: API provided is not working anymore. it has been changed to apilayer.
 ref: https://github.com/exchangeratesapi/exchangeratesapi/issues/117
 
 new api layer documentation: https://apilayer.com/marketplace/exchangerates_data-api
