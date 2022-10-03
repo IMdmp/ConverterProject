@@ -223,7 +223,11 @@ private fun ConverterScreen(
 
 @Composable
 fun SuccessBox(modifier: Modifier, pairData: Pair<Boolean, String>, onClick: () -> Unit) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.Center) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Text(
             pairData.second,
             style = Typography.h4.copy(color = Color.Green),

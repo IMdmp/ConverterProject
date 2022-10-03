@@ -1,6 +1,7 @@
 package com.imdmp.converter.usecase.impl
 
 import com.imdmp.converter.BuildConfig
+import com.imdmp.converter.base.Constants.Companion.DECIMAL_FORMAT
 import com.imdmp.converter.base.di.NameAnnotationConstants
 import com.imdmp.converter.repository.ConverterRepository
 import com.imdmp.converter.schema.ConvertUserWalletCurrencyError
@@ -15,6 +16,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
+import java.math.RoundingMode
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.*
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -62,8 +67,20 @@ class ConvertUserWalletCurrencyUseCaseImpl @Inject constructor(
             }
 
             val newBuyValue = userBuyBalance.currencyValue + buyWalletSchema.currencyValue
+            val df = DecimalFormat(
+                DECIMAL_FORMAT, DecimalFormatSymbols.getInstance(
+                    Locale.US
+                )
+            )
+            df.roundingMode = RoundingMode.CEILING
 
-            converterRepository.updateWalletBalance(sellWalletSchema.copy(currencyValue = newSellValue))
+            converterRepository.updateWalletBalance(
+                sellWalletSchema.copy(
+                    currencyValue = df.format(
+                        newSellValue
+                    ).toDouble()
+                )
+            )
             converterRepository.updateWalletBalance(buyWalletSchema.copy(currencyValue = newBuyValue))
 
             saveTransactionUseCase(

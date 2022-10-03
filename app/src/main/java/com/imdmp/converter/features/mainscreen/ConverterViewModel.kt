@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.imdmp.converter.R
 import com.imdmp.converter.base.BaseViewModel
+import com.imdmp.converter.base.Constants
 import com.imdmp.converter.features.mainscreen.currencypicker.CurrencyModel
 import com.imdmp.converter.features.mainscreen.numberscreen.CANCEL_CHAR
 import com.imdmp.converter.schema.ConvertCurrencyFlowSchema
@@ -26,6 +27,10 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.math.RoundingMode
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -46,8 +51,15 @@ class ConverterViewModel @Inject constructor(
 
     private var characterInput = MutableSharedFlow<Char>()
     var showBalanceConvertSuccess = mutableStateOf(Pair(false, ""))
+    val df = DecimalFormat(
+        Constants.DECIMAL_FORMAT, DecimalFormatSymbols.getInstance(
+            Locale.US
+        )
+    )
 
     init {
+        df.roundingMode = RoundingMode.CEILING
+
         viewModelScope.launch(Dispatchers.IO) {
             updateWalletBalance()
             getAvailableCurrenciesUseCase(true)
@@ -69,10 +81,9 @@ class ConverterViewModel @Inject constructor(
                             retrieveData(result.toDouble()) { convertSchema ->
                                 _converterViewState.postValue(
                                     converterViewState.value?.copy(
-                                        sellCurrencyData = convertSchema.convertedCurrencyResult.toString()
+                                        sellCurrencyData = df.format(convertSchema.convertedCurrencyResult)
                                     )
                                 )
-
                                 submitButtonEnabled.value = true
                             }
 
@@ -99,7 +110,7 @@ class ConverterViewModel @Inject constructor(
                             retrieveData(result.toDouble()) { convertSchema ->
                                 _converterViewState.postValue(
                                     converterViewState.value?.copy(
-                                        receiveCurrencyData = convertSchema.convertedCurrencyResult.toString()
+                                        receiveCurrencyData = df.format(convertSchema.convertedCurrencyResult)
                                     )
                                 )
                                 submitButtonEnabled.value = true
@@ -186,7 +197,7 @@ class ConverterViewModel @Inject constructor(
                         showBalanceConvertSuccess.value = Pair(
                             true,
                             "You have converted ${result.sellData.currencyValue} ${result.sellData.currencyAbbrev} " +
-                                "to ${result.buyData.currencyValue} ${result.buyData.currencyAbbrev}. Commission Fee - ${result.commissionCharged} ${result.sellData.currencyAbbrev}."
+                                "to ${result.buyData.currencyValue} ${result.buyData.currencyAbbrev}. Commission Fee: ${result.commissionCharged} ${result.sellData.currencyAbbrev}."
                         )
                         delay(3000)
                         showBalanceConvertSuccess.value = Pair(false, "")
